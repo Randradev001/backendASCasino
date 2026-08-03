@@ -47,7 +47,21 @@ accesos directos sin convertirlos en roles.
 
 `DefEmp` e `IngDefEmp` no se duplican en Seguridad: ambos operan sobre `DEFEMP`, ya migrada en Maestros del Sistema. `CamClav` queda cubierto por el endpoint de cambio de clave; falta una pantalla de autoservicio si se decide exponerla fuera del perfil.
 
-No se debe marcar Seguridad como terminada hasta asociar cada ruta de negocio con los codigos `SistCod`, `Modcod`, `ProgCod` y `ProgOPCod` equivalentes a `VA2`.
+No se debe marcar Seguridad como terminada hasta asociar cada ruta de negocio con los
+codigos `SistCod`, `Modcod`, `ProgCod` y `ProgOPCod` equivalentes a `VA2`. La creación
+de pedidos usa 55/1/1, la capacidad de escoger otro solicitante usa 55/1/90 y el
+historial usa 55/5/6. El panel ejecutivo principal conserva acceso para 55/1/1 o
+cualquiera de las consultas 55/5/1 a 55/5/6; el resto continúa pantalla por pantalla.
+
+## Estado observado en BDADP_CASINO (2026-07-30)
+
+- 25 usuarios habilitados para la empresa 1.
+- 14 roles y 31 asignaciones de rol por usuario.
+- 2 administradores efectivos de Seguridad: `JPALMA` y `MANDRADE`, mediante `ADMINFULL`.
+- 4 usuarios conservan `ADMFULL` (Administrador de Datos); ese rol no equivale a `ADMINFULL` y no habilita la administracion de Seguridad.
+- 1 usuario tiene credencial moderna en `SEGUSUCRED`; 24 conservan autenticacion legada y deben migrarse gradualmente al iniciar sesion o cambiar su clave.
+
+La respuesta de sesion publica `security.canManage`, calculado por el backend con la misma politica de `requireSecurityAdmin`. El frontend usa esa capacidad para mostrar el menu y proteger las rutas de Usuarios, Roles, Catalogos y Asignaciones.
 
 ## Exportacion APERP
 

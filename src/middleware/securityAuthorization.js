@@ -26,14 +26,31 @@ const requirePermission = (resolveRequired) => (req, res, next) => {
   return next();
 };
 
-const requireSecurityAdmin = (req, res, next) => {
+const requireAnyPermission = (requiredPermissions) => (req, res, next) => {
+  const permissions = req.auth?.permissions || {};
+  if ((requiredPermissions || []).some((required) => hasPermission(permissions, required))) return next();
+  return res.status(403).json({ code: 'FORBIDDEN', message: 'No tiene permisos para consultar el panel de pedidos.' });
+};
+
+const requireAnySystem = (systemCodes) => (req, res, next) => {
+  const required = new Set((systemCodes || []).map(numeric).filter(Number.isInteger));
+  const assigned = Array.isArray(req.auth?.permissions?.sistemas) ? req.auth.permissions.sistemas : [];
+  if (assigned.some((item) => required.has(numeric(item.SistCod)))) return next();
+  return res.status(403).json({ code: 'FORBIDDEN', message: 'No tiene permisos para consultar Personas.' });
+};
+
+const isSecurityAdmin = (auth) => {
   const configured = String(process.env.SECURITY_ADMIN_LOGINS || '').split(',').map((item) => item.trim().toUpperCase()).filter(Boolean);
   const adminRoles = String(process.env.SECURITY_ADMIN_ROLES || 'ADMINFULL').split(',').map((item) => item.trim().toUpperCase()).filter(Boolean);
-  const login = String(req.auth?.user?.login || '').toUpperCase();
+  const login = String(auth?.user?.login || '').toUpperCase();
   const minimumLevel = Number(process.env.SECURITY_ADMIN_MIN_LEVEL || 900);
-  const level = Number(req.auth?.user?.nivelSeguridad || 0);
-  const roles = Array.isArray(req.auth?.user?.roles) ? req.auth.user.roles.map((item) => String(item).toUpperCase()) : [];
-  if (configured.includes(login) || adminRoles.some((role) => roles.includes(role)) || level >= minimumLevel) return next();
+  const level = Number(auth?.user?.nivelSeguridad || 0);
+  const roles = Array.isArray(auth?.user?.roles) ? auth.user.roles.map((item) => String(item).toUpperCase()) : [];
+  return configured.includes(login) || adminRoles.some((role) => roles.includes(role)) || level >= minimumLevel;
+};
+
+const requireSecurityAdmin = (req, res, next) => {
+  if (isSecurityAdmin(req.auth)) return next();
   return res.status(403).json({ code: 'SECURITY_ADMIN_REQUIRED', message: 'Se requiere autorizacion para administrar Seguridad.' });
 };
 
@@ -46,4 +63,4 @@ const verifyPermission = (req, res, next) => {
   }
 };
 
-module.exports = { hasPermission, requirePermission, requireSecurityAdmin, verifyPermission };
+module.exports = { hasPermission, requirePermission, requireAnyPermission, requireAnySystem, isSecurityAdmin, requireSecurityAdmin, verifyPermission };

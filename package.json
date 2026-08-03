@@ -8,6 +8,7 @@
     "catalog:gx8:project": "node scripts/catalog-gx8-project.js",
     "db:sql": "node scripts/run-sql-file.js",
     "verify:conex": "node scripts/verify-conex-migration.js",
+    "verify:casino": "node scripts/verify-casino-database.js BDADP_CASINO",
     "test": "node --test",
     "start": "node index.js"
   },

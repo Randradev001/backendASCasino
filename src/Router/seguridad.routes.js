@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const SeguridadController = require('../controllers/seguridadController');
 const SeguridadCatalogosController = require('../controllers/seguridadCatalogosController');
+const SeguridadResumenController = require('../controllers/seguridadResumenController');
 const authContext = require('../middleware/authContext');
 const { requireSecurityAdmin, verifyPermission } = require('../middleware/securityAuthorization');
 
@@ -10,6 +11,7 @@ router.get('/menu', authContext, SeguridadController.menu);
 router.post('/logout', SeguridadController.logout);
 router.put('/password', authContext, SeguridadController.changePassword);
 router.post('/verificar-acceso', authContext, verifyPermission);
+router.get('/resumen', authContext, requireSecurityAdmin, SeguridadResumenController.summary);
 
 router.use('/catalogos', authContext, requireSecurityAdmin);
 router.get('/catalogos', SeguridadCatalogosController.metadata);

@@ -1,5 +1,6 @@
 const SeguridadService = require('../services/seguridad.service');
 const { COOKIE_NAME, getSessionToken } = require('../middleware/authContext');
+const { isSecurityAdmin } = require('../middleware/securityAuthorization');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const cookieOptions = (expiresAt) => [
@@ -31,6 +32,7 @@ const login = async (req, res) => {
     if (result.requiresCompany) return res.json(result);
     setSessionCookie(res, result.token, result.expiresAt);
     delete result.token;
+    result.security = { canManage: isSecurityAdmin({ user: result.user }) };
     return res.json(result);
   } catch (error) {
     return sendError(res, error);
@@ -43,6 +45,7 @@ const session = (req, res) => res.json({
   company: req.auth.company,
   permissions: req.auth.permissions,
   menu: req.auth.menu,
+  security: { canManage: isSecurityAdmin(req.auth) },
   expiresAt: req.auth.expiresAt
 });
 
