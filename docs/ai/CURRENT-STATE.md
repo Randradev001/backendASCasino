@@ -1,6 +1,6 @@
 # Estado actual de ADP Casino
 
-Última verificación: 2026-08-02.
+Última verificación: 2026-10-16.
 
 ## Alcance activo
 
@@ -28,6 +28,10 @@ React/MUI
 La cookie de sesión es `HttpOnly`. El frontend nunca decide la empresa ni autoriza una
 acción por sí mismo.
 
+El backend aplica además límites de cuerpo, rate limit al login, respuestas de error
+JSON sin stack, `Cache-Control: no-store` y headers defensivos. CORS sigue admitiendo
+hosts privados durante desarrollo, pero en producción exige la lista `CORS_ORIGINS`.
+
 ## Funcionalidad implementada
 
 | Área | Estado | Entrada principal |
@@ -37,6 +41,7 @@ acción por sí mismo.
 | Ficha y búsqueda de Personas | Implementada | `/personas` |
 | Dashboard ejecutivo principal | Implementado | `/dashboard/default` |
 | Crear solicitud Casino | Implementado | `/casino/pedidos/nuevo` |
+| Controlar solicitudes del Casino | Implementado; catálogo y tabla aplicados en `BDADP_CASINO` | `/casino/solicitudes` |
 | Historial y detalle de pedidos | Implementado | `/casino/pedidos/historial` |
 
 El panel ejecutivo presenta cuatro conclusiones calculadas por el backend: cumplimiento,
@@ -54,8 +59,9 @@ compatibilidad.
 El dashboard principal permanece siempre en el grupo estático `Inicio > Panel
 ejecutivo`. El menú dinámico autorizado agrega:
 
-- `Pedidos Casino > Operacional > Pedidos Casino` para 55/1/1.
-- `Pedidos Casino > Consultas > Historial de Pedidos` para 55/5/6.
+- `Solicitudes Casino > Operacional > Pedidos Casino` para 55/1/1.
+- `Solicitudes Casino > Operacional > Ver solicitudes` para 55/1/10.
+- `Solicitudes Casino > Consultas > Historial de Pedidos` para 55/5/6.
 
 ## Contratos de pedido
 
@@ -66,6 +72,12 @@ ejecutivo`. El menú dinámico autorizado agrega:
 - Los precios se vuelven a consultar en `SSP06MAProducto`.
 - El detalle toma división, subdivisión y centro de costo desde `FPPersonas`.
 - Guardar crea estado 0; enviar cambia a estado 1.
+- El Casino de la sesión se resuelve por `USUARIOS.UsuRut = SSP06MACasinosPlanta.CASIRut`.
+  Con 55/1/10 puede aprobar 1 → 2 confirmando fecha/hora o rechazar 1 → 5 con comentario.
+- Un pedido en preparación puede entregarse 2 → 3. El backend usa la hora del servidor
+  y clasifica la diferencia como a tiempo, anticipada o tarde.
+- Las decisiones se auditan en `SSP06OPPedidosPlantaDecision`; empresa y casino se
+  validan nuevamente dentro de la transacción.
 - El detalle de un pedido histórico se consulta por empresa autenticada y número.
 - `Crear y enviar` exige confirmación en React; al completarse abre el historial y el
   detalle del pedido recién creado mediante el parámetro de presentación `pedido`.
@@ -91,6 +103,8 @@ deben convertirse en constantes:
 | Propósito | Tablas |
 | --- | --- |
 | Pedidos | `SSP06OPPedidosPlanta`, `SSP06OPPedidosPlantaDet` |
+| Decisiones del Casino | `SSP06OPPedidosPlantaDecision` |
+| Entregas del Casino | `SSP06OPPedidosPlantaEntrega` |
 | Catálogo Casino | `SSP06MACasinosPlanta`, `SSP06MADestinosPlanta`, `SSP06MAMotivoPedidos` |
 | Productos | `SSP06MATPProducto`, `SSP06MAProducto` |
 | Personas y ubicación | `FPPersonas`, `FPDivision`, `FPDivisionSub`, `FPCenCos` |
@@ -117,13 +131,21 @@ deben convertirse en constantes:
 4. Definir si una persona con `PerEstadoLab` inactivo puede crear pedidos.
 5. Realizar validación funcional controlada con usuarios de negocio para creación,
    envío, filtros históricos y detalle.
+6. Validar funcionalmente aprobación y rechazo con un usuario asociado a cada Casino.
 
 ## Verificación vigente
 
-- Backend: 26 pruebas con `node --test`.
-- Base: `npm run verify:casino` confirma una base Casino sin maestros CONEX.
-- Frontend: ESLint dirigido, compilación Vite de producción y revisión visual del login
-  correctos al 2026-08-02.
+- Backend: 37 pruebas pasan con `node --test` al 2026-10-16, incluidas cinco
+  verificaciones HTTP de endurecimiento.
+- Dependencias de producción: frontend sin vulnerabilidades informadas por `npm audit`;
+  backend sin críticas y con 10 observaciones residuales concentradas en Puppeteer y
+  el driver transitivo de SQL Server.
+- Base: `npm run verify:casino` conserva las comprobaciones de alcance, pero la ejecución
+  del 2026-10-16 no finalizó porque esperaba 15 pedidos y la base de trabajo contiene
+  24. No se alteraron esos datos durante este cambio.
+- Frontend: ESLint dirigido y compilación Vite de producción correctos al 2026-10-16.
+- El flujo nuevo tiene aplicado su SQL idempotente y aún requiere una prueba funcional
+  controlada; la compilación no sustituye esa validación.
 
 Estos resultados deben actualizarse cuando cambie la suite; no copiar cifras antiguas a
 una entrega nueva sin volver a ejecutar los comandos.

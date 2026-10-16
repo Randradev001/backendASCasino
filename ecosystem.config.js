@@ -5,16 +5,16 @@ module.exports = {
       script: "./index.js",   // <-- aquí el cambio
       env: {
         NODE_ENV: "production",
-        PORT: "3000",
-        SERVER: "http://localhost:3000",   // <--- necesario (string)
-        RESEND: "re_XJDieT7j_7yxSqPzfDiecv4vuGLy6Fw9H",  // <--- tu API key si usas Resend
-        SQLSERVER_HOST: "190.3.171.48",
-        SQLSERVER_USER: "sa",
-        SQLSERVER_PASSWORD: "Claveacceso123#",
-        SQLSERVER_DATABASE: "BDSYCE",
-         SQLSERVER_INSTANCE: "BDSQL2016",
-        SQLSERVER_ENCRYPT: "false",
-        SQLSERVER_TRUST_CERT: "true"
+        PORT: process.env.PORT || "3000",
+        SERVER: process.env.SERVER,
+        RESEND: process.env.RESEND,
+        SQLSERVER_HOST: process.env.SQLSERVER_HOST,
+        SQLSERVER_USER: process.env.SQLSERVER_USER,
+        SQLSERVER_PASSWORD: process.env.SQLSERVER_PASSWORD,
+        SQLSERVER_DATABASE: process.env.SQLSERVER_DATABASE,
+        SQLSERVER_INSTANCE: process.env.SQLSERVER_INSTANCE,
+        SQLSERVER_ENCRYPT: process.env.SQLSERVER_ENCRYPT,
+        SQLSERVER_TRUST_CERT: process.env.SQLSERVER_TRUST_CERT
       },
       watch: false,
       max_memory_restart: "300M"

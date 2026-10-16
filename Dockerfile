@@ -1,15 +1,13 @@
 
 
-# aav
-
-# Usar una imagen base de Node.js en Alpine
-FROM node:alpine3.18
+# Usar una version LTS explicita de Node.js.
+FROM node:20-alpine3.20
 # Establecer el directorio de trabajo
 WORKDIR /app
 # Copiar los archivos de configuración de npm
 COPY package*.json ./
 # Instalar las dependencias de Node.js
-RUN npm install
+RUN npm ci --omit=dev
 # Instalar Chromium y sus dependencias
 RUN apk update && apk upgrade && \
     apk add --no-cache \
@@ -25,5 +23,6 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 COPY . .
 # Exponer el puerto que tu aplicación utiliza (si aplica)
 EXPOSE 3000
+USER node
 # Comando para iniciar la aplicación
 CMD ["npm", "start"]

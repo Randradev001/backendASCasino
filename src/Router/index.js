@@ -8,9 +8,4 @@ router.use('/seguridad', seguridadRouter)
 router.use('/personas', personasRouter)
 router.use('/casino', casinoRouter)
 
-// test para confirmar que este router está montado
-router.get('/test', (req, res) => res.send('Router raíz OK'));
-
-
-
 module.exports = router

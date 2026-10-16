@@ -17,6 +17,10 @@ documentación distingue el estado actual de ADP Casino de estudios históricos 
 6. [Dashboard BI](migration/casino-bi-dashboard.md): fuentes e indicadores ejecutivos.
 7. [Arquitectura de Seguridad](architecture/security.md): autenticación, roles y
    asignaciones.
+8. [Seguridad antes y después](migration/security-before-after-2026-10-16.md):
+   comparación verificable del endurecimiento aplicado.
+9. [Brechas para producción y ethical hacking](migration/security-production-ethical-hacking-gap-2026-10-16.md):
+   pendientes, alcance de pruebas y criterios de aprobación.
 
 ## Organización
 

@@ -1,18 +1,19 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const routes = require('./src/Router')
-const app = express()
+const routes = require('./src/Router');
+const securityHeaders = require('./src/middleware/securityHeaders');
+
+const app = express();
 // const envioReporte = require('./src/controllers/correoController')
 // const http = require('http');
 
-var bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
-app.use(express.json()) //permite el paso del payload en el body
+app.disable('x-powered-by');
+app.use(securityHeaders);
+app.use(express.urlencoded({ extended: false, limit: '64kb', parameterLimit: 200 }));
+app.use(express.json({ limit: '256kb' }));
 app.get('/ping', (req, res) => {
-  res.send('Servidor responde ✅');
+  res.type('text/plain').send('Servidor responde ✅');
 });
 
 
@@ -41,11 +42,28 @@ app.use(cors({
   credentials: true,
   origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin) || isDevelopmentOrigin(origin)) return callback(null, true);
-    return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    const error = new Error('Origen no permitido por CORS.');
+    error.status = 403;
+    error.code = 'CORS_ORIGIN_DENIED';
+    return callback(error);
   }
 }));
 
-app.use('/backendDocker',routes);
+app.use('/backendDocker', routes);
+
+app.use((req, res) => res.status(404).json({ code: 'NOT_FOUND', message: 'Ruta no encontrada.' }));
+
+app.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
+  const status = Number(error.status || error.statusCode || 500);
+  const safeStatus = Number.isInteger(status) && status >= 400 && status <= 599 ? status : 500;
+  const code = error.code || (error.type === 'entity.too.large' ? 'PAYLOAD_TOO_LARGE' : 'INTERNAL_ERROR');
+  if (safeStatus >= 500) console.error('Error HTTP no controlado:', error);
+  return res.status(safeStatus).json({
+    code,
+    message: safeStatus === 500 ? 'No fue posible completar la operacion.' : error.message
+  });
+});
 
 
 
@@ -75,7 +93,10 @@ timezone: "America/Santiago"
 }); */
 
 const port = Number(process.env.PORT || 3000);
-app.listen(port, () => {
-  console.log(`Servidor corriendo en puerto: ${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Servidor corriendo en puerto: ${port}`);
+  });
+}
 
+module.exports = app;

@@ -4,8 +4,22 @@ const SeguridadCatalogosController = require('../controllers/seguridadCatalogosC
 const SeguridadResumenController = require('../controllers/seguridadResumenController');
 const authContext = require('../middleware/authContext');
 const { requireSecurityAdmin, verifyPermission } = require('../middleware/securityAuthorization');
+const { rateLimit } = require('express-rate-limit');
 
-router.post('/login', SeguridadController.login);
+const positiveNumber = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const loginRateLimit = rateLimit({
+  windowMs: positiveNumber(process.env.LOGIN_RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
+  limit: positiveNumber(process.env.LOGIN_RATE_LIMIT_MAX, 20),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { code: 'TOO_MANY_LOGIN_ATTEMPTS', message: 'Demasiados intentos. Intente nuevamente mas tarde.' }
+});
+
+router.post('/login', loginRateLimit, SeguridadController.login);
 router.get('/session', authContext, SeguridadController.session);
 router.get('/menu', authContext, SeguridadController.menu);
 router.post('/logout', SeguridadController.logout);

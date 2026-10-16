@@ -316,6 +316,49 @@ CREATE INDEX IX_SSP06OPPedidosPlantaDet_Producto ON dbo.SSP06OPPedidosPlantaDet 
 CREATE INDEX IX_SSP06OPPedidosPlantaDet_CentroCosto ON dbo.SSP06OPPedidosPlantaDet (GECODEMP, CecId);
 CREATE INDEX IX_SSP06OPPedidosPlantaDet_Ubicacion ON dbo.SSP06OPPedidosPlantaDet (GECODEMP, DivId, SdiId);
 
+/* Decision operacional del Casino sobre una solicitud enviada. */
+CREATE TABLE dbo.SSP06OPPedidosPlantaDecision (
+  GECODEMP decimal(10,0) NOT NULL,
+  PEDNumero decimal(10,0) NOT NULL,
+  Decision varchar(10) NOT NULL,
+  Comentario varchar(500) NULL,
+  FechaEntregaConfirmada datetime NULL,
+  HoraEntregaConfirmada datetime NULL,
+  UsuLogin varchar(10) NOT NULL,
+  FechaDecision datetime2 NOT NULL,
+  CONSTRAINT PK_SSP06OPPedidosPlantaDecision PRIMARY KEY (GECODEMP, PEDNumero),
+  CONSTRAINT FK_SSP06OPPedidosPlantaDecision_Pedido FOREIGN KEY (GECODEMP, PEDNumero)
+    REFERENCES dbo.SSP06OPPedidosPlanta (GECODEMP, PEDNumero),
+  CONSTRAINT CK_SSP06OPPedidosPlantaDecision_Tipo CHECK (Decision IN ('APROBADO', 'RECHAZADO')),
+  CONSTRAINT CK_SSP06OPPedidosPlantaDecision_Comentario CHECK (
+    Decision <> 'RECHAZADO' OR (Comentario IS NOT NULL AND LEN(LTRIM(RTRIM(Comentario))) >= 3)
+  ),
+  CONSTRAINT CK_SSP06OPPedidosPlantaDecision_Entrega CHECK (
+    Decision <> 'APROBADO' OR (FechaEntregaConfirmada IS NOT NULL AND HoraEntregaConfirmada IS NOT NULL)
+  )
+);
+
+/* Confirmacion de entrega y cumplimiento contra la hora comprometida. */
+CREATE TABLE dbo.SSP06OPPedidosPlantaEntrega (
+  GECODEMP decimal(10,0) NOT NULL,
+  PEDNumero decimal(10,0) NOT NULL,
+  FechaHoraProgramada datetime NOT NULL,
+  FechaHoraEntrega datetime NOT NULL,
+  DiferenciaMinutos int NOT NULL,
+  Cumplimiento varchar(12) NOT NULL,
+  UsuLogin varchar(10) NOT NULL,
+  FechaRegistro datetime2 NOT NULL,
+  CONSTRAINT PK_SSP06OPPedidosPlantaEntrega PRIMARY KEY (GECODEMP, PEDNumero),
+  CONSTRAINT FK_SSP06OPPedidosPlantaEntrega_Pedido FOREIGN KEY (GECODEMP, PEDNumero)
+    REFERENCES dbo.SSP06OPPedidosPlanta (GECODEMP, PEDNumero),
+  CONSTRAINT CK_SSP06OPPedidosPlantaEntrega_Cumplimiento CHECK (Cumplimiento IN ('ATIEMPO', 'ANTICIPADO', 'ATRASADO')),
+  CONSTRAINT CK_SSP06OPPedidosPlantaEntrega_Diferencia CHECK (
+    (Cumplimiento='ATIEMPO' AND DiferenciaMinutos=0) OR
+    (Cumplimiento='ANTICIPADO' AND DiferenciaMinutos<0) OR
+    (Cumplimiento='ATRASADO' AND DiferenciaMinutos>0)
+  )
+);
+
 CREATE TABLE dbo.SSP06OPEvalPedidoCasino (
   GECODEMP decimal(10,0) NOT NULL,
   EVPedCod int NOT NULL,

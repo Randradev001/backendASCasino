@@ -4,11 +4,11 @@ BEGIN TRANSACTION;
 /* Menú principal del módulo Casino. Las asignaciones se administran por separado. */
 IF EXISTS (SELECT 1 FROM dbo.SISTEMAS WHERE SistCod=55)
   UPDATE dbo.SISTEMAS
-  SET SistNombre='Pedidos Casino'
+  SET SistNombre='Solicitudes Casino'
   WHERE SistCod=55;
 ELSE
   INSERT INTO dbo.SISTEMAS (SistCod,SistNombre,SistFecCrea,SistVersion,SistFAIcons)
-  VALUES (55,'Pedidos Casino',GETDATE(),0,NULL);
+  VALUES (55,'Solicitudes Casino',GETDATE(),0,NULL);
 
 IF EXISTS (SELECT 1 FROM dbo.MODULOS WHERE SistCod=55 AND Modcod=1)
   UPDATE dbo.MODULOS

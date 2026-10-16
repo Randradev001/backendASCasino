@@ -15,6 +15,12 @@ sesión. Los códigos de empresa no forman parte del contrato público.
 | `GET /casino/pedidos/contexto` | Solicitante y catálogos para crear | 55/1/1 |
 | `POST /casino/pedidos` | Crear borrador con cabecera y detalle | 55/1/1 |
 | `POST /casino/pedidos/:numero/enviar` | Pasar borrador propio a estado 1 | 55/1/1 |
+| `GET /casino/solicitudes` | Solicitudes del Casino asociado a la sesión | 55/1/10 |
+| `GET /casino/solicitudes/:numero` | Detalle operacional del mismo Casino | 55/1/10 |
+| `GET /casino/solicitudes/personas/:rut/historial` | Historial de la persona en el mismo Casino | 55/1/10 |
+| `POST /casino/solicitudes/:numero/aprobar` | Confirmar fecha/hora y cambiar 1 → 2 | 55/1/10 |
+| `POST /casino/solicitudes/:numero/rechazar` | Exigir comentario y cambiar 1 → 5 | 55/1/10 |
+| `POST /casino/solicitudes/:numero/entregar` | Registrar hora efectiva y cambiar 2 → 3 | 55/1/10 |
 
 La respuesta de `GET /casino/bi/pedidos` incluye `conclusions`, con cuatro lecturas
 ejecutivas, y `assistant`, con preguntas sugeridas y respuestas fundamentadas en los
@@ -23,6 +29,10 @@ servicio externo.
 
 El permiso 55/1/90 no reemplaza 55/1/1. Es una capacidad adicional que permite elegir
 otro `PedRutSolicita` dentro de la empresa autenticada.
+
+El permiso 55/1/10 corresponde al control operacional del Casino. Además del permiso,
+el backend exige que el RUT de `USUARIOS` esté asociado a `CASIRut` para limitar todas
+las lecturas y mutaciones a ese Casino. El navegador no envía `empCod` ni `casinoId`.
 
 ### Crear borrador
 
@@ -98,6 +108,7 @@ pero el backend vuelve a validar cada operación.
 | `/dashboard/default` | Entrada estática `Inicio > Panel ejecutivo` | Dashboard principal |
 | `/casino/pedidos/nuevo` | 55/1/1, `ssp.maeSSP06OPPedidosPlanta.aspx` | Nueva solicitud |
 | `/casino/pedidos/historial` | 55/5/6, `react.casinoHistory` | Dashboard histórico |
+| `/casino/solicitudes` | 55/1/10, `react.casinoRequests` | Control operacional del Casino |
 | `/personas` | Llamados GX de Personas | Listado de personas |
 | `/personas/:rut` | Navegación interna | Ficha de persona |
 | `/seguridad/*` | Llamados GX de Seguridad | Administración protegida |
