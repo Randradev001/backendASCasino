@@ -1,6 +1,8 @@
 node_modules
 .git
 .github
+.codex*
+.DS_Store
 .env
 .env.*
 !.env.example

@@ -1,0 +1,49 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.08kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:24.22.3-alpine3.24
+#2 DONE 0.7s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 146B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 11.25kB done
+#4 DONE 0.0s
+
+#5 [1/7] FROM docker.io/library/node:24.22.3-alpine3.24@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
+#5 resolve docker.io/library/node:24.22.3-alpine3.24@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 0.0s done
+#5 DONE 0.0s
+
+#6 [3/7] COPY package*.json ./
+#6 CACHED
+
+#7 [4/7] RUN npm ci --omit=dev
+#7 CACHED
+
+#8 [2/7] WORKDIR /app
+#8 CACHED
+
+#9 [5/7] RUN apk update && apk upgrade &&     apk add --no-cache     chromium     nss     freetype     harfbuzz     ca-certificates     ttf-freefont
+#9 CACHED
+
+#10 [6/7] RUN rm -rf /usr/local/lib/node_modules/npm /opt/yarn-* &&     rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg
+#10 DONE 0.5s
+
+#11 [7/7] COPY . .
+#11 DONE 0.1s
+
+#12 exporting to image
+#12 exporting layers
+#12 exporting layers 0.4s done
+#12 exporting manifest sha256:b85ceda578a0cbcacb5459bd59c42798fe3c32057e4bc832f0ee2bd4a6b89b36 done
+#12 exporting config sha256:ccb7e973cc6572ecf335b5394ea97215fe28ce718915f48e4e2b5c47052cb768 done
+#12 exporting attestation manifest sha256:8abad0d000681da80c43fdebfca5714f12246fcc105330f53ff7ee735402aad4 done
+#12 exporting manifest list sha256:d72cb415631d1278e4b08be96ec7c1fe8dab12cffa9d34d97e64932e3faa1553 done
+#12 naming to docker.io/library/adp-casino-backend:security-20261116 done
+#12 unpacking to docker.io/library/adp-casino-backend:security-20261116 0.1s done
+#12 DONE 0.6s

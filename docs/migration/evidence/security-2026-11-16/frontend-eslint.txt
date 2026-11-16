@@ -1,0 +1,5 @@
+Command: node node_modules/eslint/bin/eslint.js vite.config.mjs test/securityDependencies.test.cjs
+Runtime: Node 24.22.3
+Exit code: 0
+Output:
+(no output)

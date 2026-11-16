@@ -1,0 +1,318 @@
+{
+  "index.html": {
+    "bytes": 2041,
+    "sha256": "5a1466cf06210d621be3c368e1d9b856a2ba2da45bed353efd5f795b3ec87c32"
+  },
+  "icon-192.png": {
+    "bytes": 3957,
+    "sha256": "3bc7bb193b6dc7477de279e8e851be150bd9efc9bd78d9e40b2a1a4ba21dd656"
+  },
+  "workbox-9c191d2f.js": {
+    "bytes": 15112,
+    "sha256": "04b086f1b2f4215ee4b659a7bc9c76162894abdb43fa876247bc7c0bd6fd1c37"
+  },
+  "registerSW.js": {
+    "bytes": 144,
+    "sha256": "9d4b955e8c7e5130e85d7d981d2b5f9f9fa73966908ad9524975fd7838f318a3"
+  },
+  "manifest.webmanifest": {
+    "bytes": 335,
+    "sha256": "fafda1b8a430630c97e2faef6863a53de862b5779e42a9dcac4ae864f0cb0303"
+  },
+  "favicon.svg": {
+    "bytes": 389,
+    "sha256": "00f99edb40cc50d456787437a7227cf214d60afee3d8c6ea76b143e6f9f9d43a"
+  },
+  "sw.js": {
+    "bytes": 4048,
+    "sha256": "b54d65dc43519550e2727fe242321abc3de93ffcbf890b342000f960ea8dc010"
+  },
+  "icon-512.png": {
+    "bytes": 11026,
+    "sha256": "93c85a720258afc65d80182da4fced032b76d5a5b213007b128ce938aaeb58fe"
+  },
+  "css/index-DMouZ4Os.css": {
+    "bytes": 8661,
+    "sha256": "8c70b378db38455f793611237790b71ed6a128891221ffd0b72aec382a0c81b4"
+  },
+  "images/beverages-DEFew_NT.webp": {
+    "bytes": 103978,
+    "sha256": "b1aa3df71ffb84c22f529e1c73dacd376a795fa06a14784608ca0eff53ae0c30"
+  },
+  "images/pastry-DqoUvGbs.webp": {
+    "bytes": 63536,
+    "sha256": "946289dd3580ef71a345ddd10289718de8d7f0cca4232fce6511d01a924f2137"
+  },
+  "images/avatar-1-B0hIH1z9.png": {
+    "bytes": 5019,
+    "sha256": "51c6502a70bc0b6dbc8f058d7184eca762cac24e75abdf87e4e3a095aa9d36dc"
+  },
+  "images/cafeteria-DvoIfz-U.webp": {
+    "bytes": 56302,
+    "sha256": "7af92c50450956cb1bdecae88578d3cd891631e15b17185e3c2458a528405473"
+  },
+  "images/agrosuper-logo-DjFESb5i.png": {
+    "bytes": 6079,
+    "sha256": "d2d526d852d5efa92b25342ea87eaad938dc13baacbf79fbdf04099384cc3962"
+  },
+  "images/cold-meals-bGMoYbei.webp": {
+    "bytes": 54082,
+    "sha256": "42cbe15cc1e12ed6a968b810271ec8e9f36a665d4f6df473416917df406cc9dd"
+  },
+  "images/lunch-Bw4oWzeh.webp": {
+    "bytes": 69112,
+    "sha256": "50ae3d8f4b8b7e8ea413d6f0eca846132d54caae08172eb67ac3d45fb272b634"
+  },
+  "images/utensils-C2ASLIR6.webp": {
+    "bytes": 33534,
+    "sha256": "ae01e888d773e23c5e1fffab24ec6917db68d35b2067964503aa53b8543ab427"
+  },
+  "images/agrosuper-casino-hero-Dd_HrBb8.webp": {
+    "bytes": 147360,
+    "sha256": "137fb3f1732e0e0b61a40906bcf84ccf54fe6c5cb6752739467e4cba8e584e89"
+  },
+  "images/sandwiches-CFnkBDgQ.webp": {
+    "bytes": 55800,
+    "sha256": "1019665176c53d2d2421afb9c138bb2ed953122736769228a3280c2ed2ef08a0"
+  },
+  "js/Login-8asX1Hxa.js": {
+    "bytes": 6784,
+    "sha256": "f1b483717ac44ca9d3c4cde9ac0d844203e765a2c1e3b925030f7511ee6013ad"
+  },
+  "js/SecurityCatalogPage-CWb92Iq2.js": {
+    "bytes": 46179,
+    "sha256": "a594f03a2575de17cf8e0eba358fa80ad0ba92007116b8096100bb51d65d4a00"
+  },
+  "js/DataGrid-CLly6JSD.js": {
+    "bytes": 441370,
+    "sha256": "01da8a4a807cb02b141b6db3cde56c02ee3544f655c993dbb6c0b858bc06c118"
+  },
+  "js/EyeOutlined-D6sGbdLh.js": {
+    "bytes": 2191,
+    "sha256": "918b96a1881f2ca4982bee7baf95b18cea7f2a11511d91f2907b460199ac73ab"
+  },
+  "js/PersonasPage-DBim0sfr.js": {
+    "bytes": 3030,
+    "sha256": "4fc68a67354c4cddd3961252de6093bd0f72e852d7468221ae852b7b339c756f"
+  },
+  "js/default-IqRswl2A.js": {
+    "bytes": 99752,
+    "sha256": "c300cc27febe20b62e08eefd729ded062ac00ff12d074ffe7ed1805c3806fb0a"
+  },
+  "js/Pagination-ffK7FJDA.js": {
+    "bytes": 9289,
+    "sha256": "7ac4458797272c60b3b861d69f547383826923cd4c90d723f22b2e5b83ad0be1"
+  },
+  "js/TableRow-BnkJIWwT.js": {
+    "bytes": 3868,
+    "sha256": "c3a4882573aa037d62a210e311e28a428fad8a43972f4ce9f63e0f94439b1974"
+  },
+  "js/useQuery-B9REdF2f.js": {
+    "bytes": 8838,
+    "sha256": "5d9ba88332c9036cd08e4bed685d8f7059ce678c1eff9a4dbc70ca366502e728"
+  },
+  "js/casinoBiApi-BSHcxKhf.js": {
+    "bytes": 216002,
+    "sha256": "5023602d6094daa870f854edda023bc3bc5d6dcb23a80fecfd977ac677fa1476"
+  },
+  "js/UserAssignmentActionsPage-DDOdSY1Y.js": {
+    "bytes": 877,
+    "sha256": "8dd2eb1e9e5e4ffaef8f40cb17aed39496d4690312f7e8dadb964fea882c82d0"
+  },
+  "js/personasApi-CjKIb9ys.js": {
+    "bytes": 283,
+    "sha256": "fe9459ec05d3c5d7a2b57b86f3cbcc8346b5ee77570e9e5fbf179bf014d33171"
+  },
+  "js/SecurityCompositePage-BVR-p8Kk.js": {
+    "bytes": 999,
+    "sha256": "8acf5287005993aa21842e03e7bd072cdab66989d93ed786b5c89c863956965b"
+  },
+  "js/UserAssignmentsPage-DTkkdzwF.js": {
+    "bytes": 17423,
+    "sha256": "c4e4f6e1b861323c03c7eaf354b4d368082228ff91bd31d7685d205be8bafe8e"
+  },
+  "js/CheckOutlined-C2PLAR-E.js": {
+    "bytes": 1900,
+    "sha256": "6096cebca14b22a2ba91dc5d3b6216f42a8b514ae95a237398c5403db9cd120d"
+  },
+  "js/OrderHistoryPage-uJAr2aOf.js": {
+    "bytes": 15926,
+    "sha256": "39a1c4a7363b632874023816789eb3296dcf0558104e77bdeefbade38cfcbb34"
+  },
+  "js/ShoppingCartOutlined-BBWENxQT.js": {
+    "bytes": 4656,
+    "sha256": "27c47f50982a4e505bb4a834807526778f0116d6841cf90167498a887ea9f7d3"
+  },
+  "js/DialogTitle-nD60ywfc.js": {
+    "bytes": 6915,
+    "sha256": "c68f2c852f15878d37716bd2c9e2d2752e6b51df16d9a0e98476b29e423bf049"
+  },
+  "js/EyeInvisibleOutlined-B0N6vFEe.js": {
+    "bytes": 124320,
+    "sha256": "79c484df12af7626c935dfaeb85d1c095a50fd81e5465beae7f4c2304bde109d"
+  },
+  "js/index-kTdvZ10J.js": {
+    "bytes": 905252,
+    "sha256": "8eaa188feec4130359401d63e446bc9d19f156a130471b23ae4d078b387e959b"
+  },
+  "js/TextField-Dsmtd517.js": {
+    "bytes": 2554,
+    "sha256": "609943cf2bfb2860dc3fc2810961dd5e48ea77b782c29af04b88b17414133772"
+  },
+  "js/NewOrderPage-DS4IeJVF.js": {
+    "bytes": 24829,
+    "sha256": "1b642eea38d747252b78a901968790a9ca6c7aa5a4a77ac03456398f796774bf"
+  },
+  "js/PlusOutlined-CcTN4lZ8.js": {
+    "bytes": 1855,
+    "sha256": "1dae473071413c419e99a044c3624e5dec879295de3b65759db54a6e4a114669"
+  },
+  "js/SaveOutlined-B95g4WOA.js": {
+    "bytes": 7873,
+    "sha256": "369b47727aaf985157bf538dbbed78fc53b8cf84f1e55cd48ed44494ccc89c17"
+  },
+  "js/RolePermissionsDialog-D4coMcl3.js": {
+    "bytes": 17140,
+    "sha256": "926d1908b96fdf50398a795bb64099371df1597ee0e2710b18637a1091666f9b"
+  },
+  "js/Register-DCzjpOcX.js": {
+    "bytes": 8274,
+    "sha256": "e5ea9185f56af51f37693c26f5f6576aa66d81c5b82d1406e5d2bd3ad35aeb65"
+  },
+  "js/FormHelperText-Cpfuudru.js": {
+    "bytes": 6483,
+    "sha256": "2dabf4019ab4f726bbffdd253a8c21e2a354edac229fc99dd5f094328c0140e6"
+  },
+  "js/index.esm-Bfo2IIzP.js": {
+    "bytes": 58856,
+    "sha256": "56c275dcbfa8b5b39696f6e562d1254d9bc671e8cf85f59422cc5f8d109e29cb"
+  },
+  "js/FormControlLabel-V_9jwI89.js": {
+    "bytes": 7472,
+    "sha256": "97495d507821f13af65cae9c297a3a2dad04254134431c2c9ac70d5be04ce415"
+  },
+  "js/Select-BgNEWiQX.js": {
+    "bytes": 29244,
+    "sha256": "6291d2f5de7206447e4bad67219ee7cde4b332d0de7e3ad4a161d2cae4e75cf3"
+  },
+  "js/ArrowLeftOutlined-7RXv7-Je.js": {
+    "bytes": 1938,
+    "sha256": "f0893a6807bbc117927665b4c865d051754f4493268fef21bf2b973001a8b5a4"
+  },
+  "js/TableCell-DqUumvfe.js": {
+    "bytes": 2841,
+    "sha256": "21d61c8fb7c53bceff73e39388ac2a726cd0146ebfb8fcf4ec237d20902ca8ac"
+  },
+  "js/with-selector-DNGNta6g.js": {
+    "bytes": 5030,
+    "sha256": "1c744ca02869c584647ae1fba0a0915184367392f1cb70adc6acbf6e00a7dbea"
+  },
+  "js/FirstPage-CIyTLZ8a.js": {
+    "bytes": 245,
+    "sha256": "49df54c7acb580896c78117b789555a4cd22c4bedfa5b8e9802d073fe40b1b5d"
+  },
+  "js/PersonaDetailPage-BzryeAjh.js": {
+    "bytes": 4593,
+    "sha256": "70f56bd53b1c0bc47eab92a6612c42aed9573775a40697a3f4949f904abd26b7"
+  },
+  "js/CasinoRequestsPage-D-klrykM.js": {
+    "bytes": 22329,
+    "sha256": "d1bfb86f74822f33e13978d9f7d4e3a312bf7625beeec0fb64547da8f8b67868"
+  },
+  "fonts/public-sans-vietnamese-600-normal-P4BtCUdw.woff2": {
+    "bytes": 4500,
+    "sha256": "80d02b23f2b0c071ad2409a8a1c51fd498b95685030fd1d8916782921670bd15"
+  },
+  "fonts/public-sans-vietnamese-700-normal-D97ShjGS.woff2": {
+    "bytes": 4512,
+    "sha256": "1d1239d7cec98d8be6bc97447ee4c176eae3c59129c40f0425ca15b233235188"
+  },
+  "fonts/public-sans-latin-ext-600-normal-DfkbVac2.woff": {
+    "bytes": 14260,
+    "sha256": "b0afd64b352fc887fa94a71aab76570ef473406d5d9c2a7f565f3a262b5bdf2a"
+  },
+  "fonts/public-sans-vietnamese-400-normal-TxZB8OSn.woff2": {
+    "bytes": 4524,
+    "sha256": "f1c77775b365f4e78a6566f50c9b7bbbc89e17db85c000897050d34c68bc40ff"
+  },
+  "fonts/public-sans-vietnamese-700-normal-Dq5VrXjD.woff": {
+    "bytes": 5932,
+    "sha256": "e9a96b6a9ddba4c885a33ba02b51a29d88265c9e7a54d98f9b0adf875eaa2346"
+  },
+  "fonts/public-sans-latin-700-normal-Dm-oTPSL.woff": {
+    "bytes": 18652,
+    "sha256": "cc68ee66e71f2bfe622768a17b09c6c40b93606094b40784634ea17ebbd1dc34"
+  },
+  "fonts/public-sans-latin-400-normal-8Rpg0ruU.woff2": {
+    "bytes": 14632,
+    "sha256": "36274b5787b4f03b27e65ae971d6c808a96838ccd60c9dabaee154889b6bba82"
+  },
+  "fonts/public-sans-latin-ext-700-normal-jWHjnMgZ.woff": {
+    "bytes": 14184,
+    "sha256": "4666e9c4ccde0912e080111c50877d0e4e5d2fd4cac2d86e421add01309ee682"
+  },
+  "fonts/public-sans-latin-ext-400-normal-mk90oQqJ.woff2": {
+    "bytes": 10452,
+    "sha256": "812efcc8f7784063692076be1d14318767646847de8974a89d18074596141a54"
+  },
+  "fonts/public-sans-latin-ext-500-normal-DC-z7ASZ.woff2": {
+    "bytes": 10448,
+    "sha256": "1787aa45adfb870a086cec11215051e3af11f3e6f3dd8e17b3d7bfc81c3521a7"
+  },
+  "fonts/public-sans-vietnamese-400-normal-BO1meqcx.woff": {
+    "bytes": 5944,
+    "sha256": "5c537aff5b865a94f7cf2219808b79d7e011c820338a007a38943ce590638694"
+  },
+  "fonts/public-sans-latin-600-normal-Fru-LXNs.woff2": {
+    "bytes": 14592,
+    "sha256": "c7842f97346df1b3b470e9d71acde90f132dd858508ec5ae6606401e5d0938f7"
+  },
+  "fonts/public-sans-latin-500-normal-vCxiVFAq.woff": {
+    "bytes": 18524,
+    "sha256": "4e0f621591a48e65bb3692b35d3106cdcd28ec7924157b9e6e9a4f082ac92853"
+  },
+  "fonts/public-sans-latin-600-normal-BR59oU-I.woff": {
+    "bytes": 18556,
+    "sha256": "78ed7ab77673accbd667176aea231d3194e7309a3de9b544ad97efef6dbb139b"
+  },
+  "fonts/public-sans-latin-ext-700-normal-CgolUQuG.woff2": {
+    "bytes": 10532,
+    "sha256": "dd2078a57ba3674bd8cc99488857606e47560a4555511c33d301afbdac580ab3"
+  },
+  "fonts/public-sans-latin-500-normal-NlrCPXnF.woff2": {
+    "bytes": 14656,
+    "sha256": "55e866a00caa197bc9fafa52c907f4dfe88e51bbb3f585c777931d03eb961e96"
+  },
+  "fonts/public-sans-vietnamese-500-normal-CXYe29CY.woff": {
+    "bytes": 5940,
+    "sha256": "086d7b252e8fe88c4fc785541615ed9847c31a42300849c81130724d6f71afd9"
+  },
+  "fonts/public-sans-latin-ext-500-normal-BHCCp-na.woff": {
+    "bytes": 14204,
+    "sha256": "400f5a1f5a4caa017ef48711256194faa4ec6905aa58e8ccae9204b203980155"
+  },
+  "fonts/public-sans-latin-ext-400-normal-B02wwOdZ.woff": {
+    "bytes": 14204,
+    "sha256": "18be2c9862c6a5ae0610ddc4efd9a3e6856e7a7f859de129c4b0ee78834c1127"
+  },
+  "fonts/public-sans-vietnamese-500-normal-DjztbcKe.woff2": {
+    "bytes": 4496,
+    "sha256": "9a5c116b66e335254e3220ba08dffe292d900366bd1962111c78c6e781924260"
+  },
+  "fonts/public-sans-vietnamese-600-normal-CcnAzmUX.woff": {
+    "bytes": 5944,
+    "sha256": "5df66a6370092ef6162a1784f7a6b72becdf75ccac6b7a590b0cd89e6101306a"
+  },
+  "fonts/public-sans-latin-ext-600-normal-DchWdWJ_.woff2": {
+    "bytes": 10524,
+    "sha256": "962979846a2c91c474023dc6280864e468d512eff2b26844dffdfdb9f4a54a4f"
+  },
+  "fonts/public-sans-latin-400-normal-SBbinRkI.woff": {
+    "bytes": 18488,
+    "sha256": "edb388a938d470f8b44a273d7b4af7078e731f336afac02fc9376bdf0482193d"
+  },
+  "fonts/public-sans-latin-700-normal-BqJmxWdE.woff2": {
+    "bytes": 14600,
+    "sha256": "dace741613696827f61dbee2d984e8685f14a2846136783f3ad1c8950914bf1d"
+  }
+}

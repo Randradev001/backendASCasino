@@ -1,0 +1,23 @@
+
+> backend@1.0.0 security:gate
+> npm audit --audit-level=low && npm run security:smoke
+
+found 0 vulnerabilities
+
+> backend@1.0.0 security:smoke
+> node --test test/httpSecurity.test.js
+
+✔ expone headers defensivos y no identifica Express (35.602375ms)
+✔ rechaza origen CORS no autorizado sin filtrar detalles internos (5.116167ms)
+✔ rechaza payload JSON mayor al limite configurado (7.339708ms)
+✔ maneja cuerpos gzip corruptos sin bloquear ni detener la API (13.546167ms)
+✔ limita intentos repetidos de login (11.534917ms)
+✔ no publica la ruta interna de prueba (2.031084ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 534.8155

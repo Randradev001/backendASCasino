@@ -1,0 +1,12 @@
+{
+  "node": "v24.22.3",
+  "uid": 1000,
+  "nodeEnv": "production",
+  "chromium": "Chromium 156.0.8078.79 Alpine Linux",
+  "apiPing": 200,
+  "securityHeaders": true,
+  "excludedSensitivePaths": true,
+  "packageManagersAbsent": true,
+  "screenshotPngBytes": 12957,
+  "network": "none"
+}

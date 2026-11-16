@@ -1,0 +1,246 @@
+{
+  "date": "2026-11-16",
+  "scope": "Local source checkout and locally built Docker image; not deployment evidence",
+  "runtime": {
+    "node": "24.22.3",
+    "npm": "10.8.2"
+  },
+  "projects": {
+    "backend": {
+      "baseCommit": "8fcee930cc954547f111118d0f0badfb743080b8",
+      "audits": {
+        "all": {
+          "exitCode": 0,
+          "vulnerabilities": {
+            "info": 0,
+            "low": 0,
+            "moderate": 0,
+            "high": 0,
+            "critical": 0,
+            "total": 0
+          },
+          "error": null
+        },
+        "production": {
+          "exitCode": 0,
+          "vulnerabilities": {
+            "info": 0,
+            "low": 0,
+            "moderate": 0,
+            "high": 0,
+            "critical": 0,
+            "total": 0
+          },
+          "error": null
+        }
+      },
+      "directInstalledVersions": {
+        "cors": "2.8.5",
+        "dotenv": "16.0.1",
+        "express": "4.22.3",
+        "express-rate-limit": "8.7.1",
+        "fast-xml-parser": "5.12.1",
+        "jszip": "3.10.1",
+        "moment": "2.31.0",
+        "mssql": "12.7.14",
+        "multer": "2.5.0",
+        "node-rsa": "2.0.0",
+        "pdfkit": "0.14.0",
+        "pdfkit-table": "0.1.99",
+        "puppeteer-core": "25.17.0",
+        "resend": "6.38.1",
+        "xmlbuilder2": "4.0.3"
+      },
+      "sourceSha256": {
+        "package.json": "225451418c614f0c20afe0c7267a2d9cfd46240d8f2a91d2cd4f2b0abbfbdd66",
+        "package-lock.json": "048d4f453220975fbcc3d297c179e91486dac5736f730ef60f0327e538c86804",
+        "yarn.lock": "73154f7af91af938102a6d3fd671216bdf9e90a74b81f47ede0c58ff7e366597",
+        ".nvmrc": "584f19ccde29925286e32f566a2aa06c89efb4e2eb2bb2fc9ea5d56e2d190ac4",
+        "Dockerfile": "b97731dc1d82a4183bb5a0f75d3ae25edc51c22a1b4a12b101c5e56fefc73cc1",
+        ".dockerignore": "6c24a1216248e31822d9518ec079dfc083a63f0a53a1d4dc9dde87dca45476b4",
+        "src/puppeteer/generarImg.js": "fd531b0d054b8b0da01d6560dc9671a6a1dc719ebc81b6c121bb16b545a2d9ba",
+        "test/httpSecurity.test.js": "5c29502dbd1f9babb6f51d2907e08214300f634f0d64a422319008a40639d7db",
+        "test/securityDependencies.test.js": "00c5e5c0c8c6e7c5a6f53d3389fa30ecee75dff12b4f0d5ee9b7b4917aae30d4"
+      }
+    },
+    "frontend": {
+      "baseCommit": "3853f2a4fe1e96f528e0fb0e36d7b44ba2018475",
+      "audits": {
+        "all": {
+          "exitCode": 0,
+          "vulnerabilities": {
+            "info": 0,
+            "low": 0,
+            "moderate": 0,
+            "high": 0,
+            "critical": 0,
+            "total": 0
+          },
+          "error": null
+        },
+        "production": {
+          "exitCode": 0,
+          "vulnerabilities": {
+            "info": 0,
+            "low": 0,
+            "moderate": 0,
+            "high": 0,
+            "critical": 0,
+            "total": 0
+          },
+          "error": null
+        }
+      },
+      "directInstalledVersions": {
+        "@ant-design/colors": "8.0.1",
+        "@ant-design/icons": "6.1.0",
+        "@emotion/cache": "11.14.0",
+        "@emotion/react": "11.14.0",
+        "@emotion/styled": "11.14.1",
+        "@fontsource/public-sans": "5.2.7",
+        "@mui/base": "5.0.0-beta.70",
+        "@mui/lab": "7.0.1-beta.22",
+        "@mui/material": "7.3.8",
+        "@mui/system": "7.3.8",
+        "@mui/x-charts": "8.27.0",
+        "@mui/x-data-grid": "9.5.0",
+        "@tanstack/react-query": "5.101.0",
+        "@vitejs/plugin-react": "5.1.4",
+        "axios": "1.21.1",
+        "formik": "2.4.9",
+        "framer-motion": "12.34.2",
+        "lodash-es": "4.18.1",
+        "react": "19.2.4",
+        "react-device-detect": "2.2.3",
+        "react-dom": "19.2.4",
+        "react-number-format": "5.4.4",
+        "react-router": "7.18.4",
+        "react-router-dom": "7.18.4",
+        "simplebar-react": "3.3.2",
+        "swr": "2.4.0",
+        "vite-jsconfig-paths": "2.0.1",
+        "web-vitals": "5.1.0",
+        "yup": "1.7.1",
+        "@eslint/compat": "2.0.2",
+        "@eslint/eslintrc": "3.3.3",
+        "@eslint/js": "9.39.5",
+        "eslint": "9.39.5",
+        "eslint-config-prettier": "10.1.8",
+        "eslint-plugin-jsx-a11y": "6.10.2",
+        "eslint-plugin-prettier": "5.5.5",
+        "eslint-plugin-react": "7.37.5",
+        "eslint-plugin-react-hooks": "7.0.1",
+        "prettier": "3.8.1",
+        "vite": "7.3.8",
+        "vite-plugin-pwa": "2.0.0",
+        "deepmerge": "4.3.1-adp.1"
+      },
+      "sourceSha256": {
+        "package.json": "7f2c4fa815732b4dc3b03fbd487396300b4fda284194915750a685d4521415c3",
+        "package-lock.json": "a3992c0e00d2a10a22ae4c83f2df17f5a0e8abc492aca224577ee411d05fd7a6",
+        "yarn.lock": "bbe60029ffc02eaa70edaee4b267804b1f7ba3e0d66343632b53d8f94449e094",
+        ".nvmrc": "584f19ccde29925286e32f566a2aa06c89efb4e2eb2bb2fc9ea5d56e2d190ac4",
+        "vite.config.mjs": "cac83b360dd2bc97b534609f15df7d13a02c8d8c6c356c4c64778ac4e15e79cb",
+        "src/index.jsx": "2678d4bdea05f969bb8e548efdba26edf7861735a3552e2a5eb17f662bdc03a2",
+        "src/api/api.js": "d455e58017a7ac97f07a46169f2a2d9406d0df1a8c539cd838cae2eabd4db8ee",
+        "test/securityDependencies.test.cjs": "c08b4383c172709a366982129dfeb57cb902b5bcd52d4850fa8eb95aa68a2dde",
+        "vendor/deepmerge/package.json": "b1d529796f895526dd60ca603bbfe9af60e4966224cf86716fbb0c4aaf061e3e",
+        "vendor/deepmerge/index.cjs": "54fcbbe370b86c8358358ef226debb10b88026e604a5a2ec20a56dae2878c66e",
+        "vendor/deepmerge/LICENSE": "6cfc4687cb2f2d86f4a77e6b526290d3878e5e512f3fec2f4cb36a9cb36f798b",
+        "vendor/deepmerge/README.md": "1a77a5f31d2dac90484aed09c8f2910f83afbc22aa6b80c2f22436aae455de6e"
+      }
+    }
+  },
+  "reactArchitecture": {
+    "entrypoint": "src/index.jsx",
+    "renderMethod": "createRoot from react-dom/client",
+    "serverComponentPackages": [],
+    "serverDirectivesInSource": []
+  },
+  "frontendBuild": {
+    "files": 79,
+    "sourceMaps": [],
+    "serviceWorker": true,
+    "manifest": true
+  },
+  "capturedAtUtc": "2026-11-16T14:15:00.792728+00:00",
+  "commands": [
+    {
+      "project": "backend",
+      "command": "node --test",
+      "exitCode": 0,
+      "testsPassed": 41
+    },
+    {
+      "project": "backend",
+      "command": "npm run security:gate",
+      "exitCode": 0,
+      "httpTestsPassed": 6
+    },
+    {
+      "project": "backend",
+      "command": "npm run verify:casino",
+      "exitCode": 1,
+      "reason": "SQL login rejected; identity redacted"
+    },
+    {
+      "project": "frontend",
+      "command": "npm ci --no-fund",
+      "exitCode": 0
+    },
+    {
+      "project": "frontend",
+      "command": "npm run security:gate",
+      "exitCode": 0,
+      "testsPassed": 5
+    },
+    {
+      "project": "frontend",
+      "command": "node node_modules/eslint/bin/eslint.js vite.config.mjs test/securityDependencies.test.cjs",
+      "exitCode": 0
+    },
+    {
+      "project": "frontend",
+      "command": "node --check vendor/deepmerge/index.cjs",
+      "exitCode": 0
+    },
+    {
+      "project": "frontend",
+      "command": "node node_modules/vite/bin/vite.js build --logLevel warn",
+      "exitCode": 0
+    },
+    {
+      "project": "backend",
+      "command": "docker build --pull --progress=plain -t adp-casino-backend:security-20261116 .",
+      "exitCode": 0
+    },
+    {
+      "project": "backend",
+      "command": "docker run --rm -i --network=none adp-casino-backend:security-20261116 node - (assertions recorded in docker-smoke.txt)",
+      "exitCode": 0
+    },
+    {
+      "project": "backend",
+      "command": "trivy image --input backend-image.tar --scanners vuln --format json (aquasec/trivy:0.76.2)",
+      "exitCode": 0
+    }
+  ],
+  "docker": {
+    "imageTag": "adp-casino-backend:security-20261116",
+    "imageId": "sha256:d72cb415631d1278e4b08be96ec7c1fe8dab12cffa9d34d97e64932e3faa1553",
+    "trivyVersion": "0.76.2",
+    "vulnerabilities": [],
+    "smoke": {
+      "node": "v24.22.3",
+      "uid": 1000,
+      "nodeEnv": "production",
+      "chromium": "Chromium 156.0.8078.79 Alpine Linux",
+      "apiPing": 200,
+      "securityHeaders": true,
+      "excludedSensitivePaths": true,
+      "packageManagersAbsent": true,
+      "screenshotPngBytes": 12957,
+      "network": "none"
+    }
+  }
+}

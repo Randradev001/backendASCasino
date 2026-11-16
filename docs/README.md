@@ -22,6 +22,9 @@ documentación distingue el estado actual de ADP Casino de estudios históricos 
 9. [Brechas para producción y ethical hacking](migration/security-production-ethical-hacking-gap-2026-10-16.md):
    pendientes, alcance de pruebas y criterios de aprobación.
 
+10. [Remediación de dependencias y evidencias 2026-11-16](migration/security-remediation-2026-11-16.md):
+    versiones, auditorías completas, parche local, pruebas e imagen Docker.
+
 ## Organización
 
 - `docs/ai/`: contexto canónico y operativo para continuidad.

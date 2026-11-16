@@ -1,0 +1,8 @@
+Command: npm run verify:casino
+Exit code: 1
+Timed out: false
+
+> backend@1.0.0 verify:casino
+> node scripts/verify-casino-database.js BDADP_CASINO
+
+Login failed for user '[REDACTED]'.

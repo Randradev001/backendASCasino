@@ -1,5 +1,6 @@
 const { after, before, test } = require('node:test');
 const assert = require('node:assert/strict');
+const { gzipSync } = require('node:zlib');
 
 process.env.NODE_ENV = 'production';
 process.env.CORS_ORIGINS = 'https://casino.example.test';
@@ -51,6 +52,19 @@ test('rechaza payload JSON mayor al limite configurado', async () => {
   const body = await response.json();
   assert.equal(response.status, 413);
   assert.equal(body.code, 'PAYLOAD_TOO_LARGE');
+});
+
+test('maneja cuerpos gzip corruptos sin bloquear ni detener la API', async () => {
+  const response = await fetch(`${baseUrl}/backendDocker/no-existe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Content-Encoding': 'gzip' },
+    body: Buffer.concat([gzipSync(Buffer.from('{}')), Buffer.from('invalid-trailer')]),
+    signal: AbortSignal.timeout(3000)
+  });
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).code, 'Z_DATA_ERROR');
+  const health = await fetch(`${baseUrl}/ping`, { signal: AbortSignal.timeout(3000) });
+  assert.equal(health.status, 200);
 });
 
 test('limita intentos repetidos de login', async () => {

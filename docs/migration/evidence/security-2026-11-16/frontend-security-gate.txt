@@ -1,0 +1,22 @@
+
+> adp-frontend@2.1.0 security:gate
+> npm audit --audit-level=low && npm run security:test
+
+found 0 vulnerabilities
+
+> adp-frontend@2.1.0 security:test
+> node --test test/securityDependencies.test.cjs
+
+✔ Rollup utiliza el fork local revisado de deepmerge (0.802833ms)
+✔ no hereda propiedades inyectadas desde ninguno de los operandos (0.481875ms)
+✔ bloquea claves peligrosas recursivas y objetos sin prototipo (1.220875ms)
+✔ no evalúa getters de claves peligrosas al copiar el destino (0.1115ms)
+✔ conserva fusiones, arrays, símbolos y opciones usadas por consumidores (0.324208ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65.534917

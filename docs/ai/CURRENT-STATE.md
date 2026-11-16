@@ -1,6 +1,7 @@
 # Estado actual de ADP Casino
 
-Última verificación: 2026-10-16.
+Última verificación de dependencias y pruebas locales: 2026-11-16.
+Los datos y validaciones funcionales históricos conservan su fecha 2026-10-16.
 
 ## Alcance activo
 
@@ -135,17 +136,31 @@ deben convertirse en constantes:
 
 ## Verificación vigente
 
-- Backend: 37 pruebas pasan con `node --test` al 2026-10-16, incluidas cinco
-  verificaciones HTTP de endurecimiento.
-- Dependencias de producción: frontend sin vulnerabilidades informadas por `npm audit`;
-  backend sin críticas y con 10 observaciones residuales concentradas en Puppeteer y
-  el driver transitivo de SQL Server.
-- Base: `npm run verify:casino` conserva las comprobaciones de alcance, pero la ejecución
-  del 2026-10-16 no finalizó porque esperaba 15 pedidos y la base de trabajo contiene
-  24. No se alteraron esos datos durante este cambio.
-- Frontend: ESLint dirigido y compilación Vite de producción correctos al 2026-10-16.
-- El flujo nuevo tiene aplicado su SQL idempotente y aún requiere una prueba funcional
-  controlada; la compilación no sustituye esa validación.
+- Backend: 41 pruebas correctas con `node --test` al 2026-11-16, incluidas seis
+  verificaciones HTTP y tres de compatibilidad de dependencias actualizadas.
+- `npm audit` completo y `--omit=dev`: 0 hallazgos tanto en backend como frontend
+  al 2026-11-16. Los gates de ambos proyectos fallan desde severidad baja.
+- Runtime soportado: Node 24.22.3, declarado en `.nvmrc` y `engines` de ambos
+  repositorios. Express mínimo 4.22.3; frontend Axios mínimo 1.21.1 y Vite 7.3.8.
+- Frontend: cinco pruebas de regresión de seguridad, ESLint dirigido y build de
+  producción correctos; sin source maps y con PWA generada.
+- Workbox usa glob 14.0.6 y un fork local revisable de deepmerge 4.3.1. El fork
+  corrige CVE-2026-93753, aún sin parche oficial; se valida mediante pruebas y no
+  mediante el catálogo de npm audit. Formik conserva su dependencia separada.
+- Docker: imagen local con Node 24.22.3/Alpine 3.24, sin npm/Yarn en ejecución,
+  `NODE_ENV=production` y usuario `node`. Trivy 0.76.2 informa 0 hallazgos de
+  vulnerabilidades en la imagen final. Ping, headers y PNG real con Chromium
+  comprobados en un contenedor sin red.
+- Base: `npm run verify:casino` del 2026-11-16 no finalizó por rechazo de login SQL.
+  No se modificaron credenciales ni datos. La diferencia histórica de conteos del
+  verificador continúa pendiente; no fue posible revalidarla en esta ejecución.
+- SQL Server: versión efectiva y actualización CU pendientes en la instancia de
+  destino. Hay un diagnóstico de solo lectura en
+  `database/20261116_security_version_readonly.sql`.
+- No se realizó despliegue, actualización del motor SQL ni UAT de negocio.
+
+Detalle, referencias, límites y evidencia:
+[Remediación de dependencias 2026-11-16](../migration/security-remediation-2026-11-16.md).
 
 Estos resultados deben actualizarse cuando cambie la suite; no copiar cifras antiguas a
 una entrega nueva sin volver a ejecutar los comandos.
