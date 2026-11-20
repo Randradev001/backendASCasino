@@ -1,5 +1,6 @@
 const { getPool, sql } = require('../conectorMysql/conectorSqlServer');
 const { SecurityError } = require('./seguridad.service');
+const { enqueueOrderEvent } = require('./casinoCorreoOutbox.service');
 const { statusLabel } = require('./casinoBi.rules');
 const {
   normalizeRequestsQuery,
@@ -160,7 +161,9 @@ const loadScopedDetail = async (executor, session, casino, orderNumber) => reque
            RTRIM(ISNULL(M.Mot6Descrip,'Sin motivo')) Motive,RTRIM(ISNULL(X.Decision,'')) Decision,
            RTRIM(ISNULL(X.Comentario,'')) DecisionComment,RTRIM(ISNULL(X.UsuLogin,'')) DecisionBy,X.FechaDecision,
            Y.FechaHoraProgramada,Y.FechaHoraEntrega,Y.DiferenciaMinutos,
-           RTRIM(ISNULL(Y.Cumplimiento,'')) Cumplimiento,RTRIM(ISNULL(Y.UsuLogin,'')) DeliveredBy
+           RTRIM(ISNULL(Y.Cumplimiento,'')) Cumplimiento,RTRIM(ISNULL(Y.UsuLogin,'')) DeliveredBy,
+           P.PEDControlPago,ISNULL(E.EVPedEvaluacion,0) Evaluation,RTRIM(ISNULL(E.EvPedObsUsuario,'')) UserComment,
+           RTRIM(ISNULL(E.EVPEDOBSCasino,'')) CasinoComment,E.EVPEDFecha EvaluationAt
     FROM SSP06OPPedidosPlanta P
     LEFT JOIN FPPersonas PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
     LEFT JOIN SSP06MACasinosPlanta C ON C.GECODEMP=P.GECODEMP AND C.CASICod=P.CASICod
@@ -168,6 +171,7 @@ const loadScopedDetail = async (executor, session, casino, orderNumber) => reque
     LEFT JOIN SSP06MAMotivoPedidos M ON M.GECODEMP=P.GECODEMP AND M.Mot6Cod=P.Mot6Cod
     LEFT JOIN SSP06OPPedidosPlantaDecision X ON X.GECODEMP=P.GECODEMP AND X.PEDNumero=P.PEDNumero
     LEFT JOIN SSP06OPPedidosPlantaEntrega Y ON Y.GECODEMP=P.GECODEMP AND Y.PEDNumero=P.PEDNumero
+    LEFT JOIN SSP06OPEvalPedidoCasino E ON E.GECODEMP=P.GECODEMP AND E.EVPedCod=1 AND E.PEDNumero=P.PEDNumero
     WHERE P.GECODEMP=@empCod AND P.CASICod=@casinoId AND P.PEDNumero=@orderNumber;
     SELECT D.PRODCodigo,RTRIM(ISNULL(PR.ProdNombre,'Producto sin nombre')) ProductName,
            RTRIM(ISNULL(T.TPPRNombre,'Sin tipo')) TypeName,D.PED1Cantidad,D.PED1Precio,
@@ -209,6 +213,9 @@ const getRequestDetail = async (numberValue, context) => {
       ...classifyDeliveryTiming(numeric(header.DiferenciaMinutos)),
       deliveredBy: clean(header.DeliveredBy)
     } : null,
+    paymentControl: numeric(header.PEDControlPago),
+    evaluation: { value: numeric(header.Evaluation), userComment: clean(header.UserComment), casinoComment: clean(header.CasinoComment), at: header.EvaluationAt || null },
+    canManagePayment: numeric(header.PedEstadoIngreso) === 3,
     lines
   };
 };
@@ -295,6 +302,7 @@ const decide = async ({ numberValue, context, decision, approval, rejection }) =
           (@empCod,@orderNumber,@decision,@comment,NULL,NULL,@login,SYSUTCDATETIME());
       `);
     }
+    await enqueueOrderEvent(transaction, { empCod: session.empCod, orderNumber, eventType: approval ? 'ORDER_APPROVED' : 'ORDER_REJECTED', login: session.login });
     await transaction.commit();
     return { number: orderNumber, status: approval ? 2 : 5, statusLabel: statusLabel(approval ? 2 : 5), decision };
   } catch (error) {
@@ -348,6 +356,7 @@ const deliverRequest = async (numberValue, context) => {
         SELECT @scheduled ScheduledAt,@actual ActualAt,@difference DifferenceMinutes,@timing Timing;
       `);
     const row = result.recordset[0];
+    await enqueueOrderEvent(transaction, { empCod: session.empCod, orderNumber, eventType: 'ORDER_DELIVERED', login: session.login });
     await transaction.commit();
     return {
       number: orderNumber,

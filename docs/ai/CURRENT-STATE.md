@@ -1,6 +1,6 @@
 # Estado actual de ADP Casino
 
-Última verificación de dependencias y pruebas locales: 2026-11-16.
+Última verificación funcional y de pruebas locales: 2026-11-17.
 Los datos y validaciones funcionales históricos conservan su fecha 2026-10-16.
 
 ## Alcance activo
@@ -13,6 +13,10 @@ La solución usa dos repositorios hermanos:
 La base activa es `BDADP_CASINO`. Incluye únicamente Casino, las tablas de Personas que
 Casino necesita, Seguridad y tablas técnicas de soporte. Los maestros frutícolas de
 CONEX están excluidos.
+
+El [alcance funcional de Casino](../migration/casino-alcance-funcional.md) registra la
+cobertura de los cinco maestros, los dos flujos operativos y las cuatro consultas
+mensuales solicitadas, revisada el 2026-11-16.
 
 ## Flujo técnico
 
@@ -38,12 +42,18 @@ hosts privados durante desarrollo, pero en producción exige la lista `CORS_ORIG
 | Área | Estado | Entrada principal |
 | --- | --- | --- |
 | Autenticación y sesión | Implementada | `/login` |
+| Inicio con correo y clave | Implementado; `UsuLogin` sigue como identidad interna | `POST /seguridad/login` |
 | Administración de Seguridad | Implementada para `ADMINFULL` | `/seguridad/*` |
 | Ficha y búsqueda de Personas | Implementada | `/personas` |
 | Dashboard ejecutivo principal | Implementado | `/dashboard/default` |
 | Crear solicitud Casino | Implementado | `/casino/pedidos/nuevo` |
 | Controlar solicitudes del Casino | Implementado; catálogo y tabla aplicados en `BDADP_CASINO` | `/casino/solicitudes` |
 | Historial y detalle de pedidos | Implementado | `/casino/pedidos/historial` |
+| Maestros de Casino | Implementados los cinco CRUD con listados operacionales, filtros y exportaciones | `/casino/maestros/*` |
+| Consultas mensuales de consumo | Implementadas las cuatro matrices enero–diciembre | `/casino/consultas/*` · 55/5/1–4 |
+| Descarga general de pedidos | Implementada con filtros, paginación y exportación | `/casino/consultas/descarga-general` · 55/5/5 |
+| Evaluaciones y control de pago | Implementados con automatización y auditoría | Pedidos 55/1/1 · Casino 55/1/10 |
+| Correos Casino | Outbox, procesador, reintentos y pantalla de estatus implementados | `/casino/correos` · 55/1/92 |
 
 El panel ejecutivo presenta cuatro conclusiones calculadas por el backend: cumplimiento,
 concentración por faenadora, producto líder y tendencia. También incluye un asistente
@@ -63,6 +73,13 @@ ejecutivo`. El menú dinámico autorizado agrega:
 - `Solicitudes Casino > Operacional > Pedidos Casino` para 55/1/1.
 - `Solicitudes Casino > Operacional > Ver solicitudes` para 55/1/10.
 - `Solicitudes Casino > Consultas > Historial de Pedidos` para 55/5/6.
+- Los cinco maestros en el módulo histórico 55/10, cada uno con su propio programa.
+- Las cuatro consultas anuales en 55/5/1–4: tipo de producto, centro de costo por
+  división, persona y motivo.
+- La descarga general 55/5/5, con detalle por producto e intervalos de fecha abiertos.
+- Evaluación visual de pedidos entregados y control de pago automático/manual auditado.
+- Estado de correos para `ADMINFULL`, con cola transaccional, historial de intentos,
+  reintento manual y procesador Resend configurable.
 
 ## Contratos de pedido
 
@@ -71,6 +88,10 @@ ejecutivo`. El menú dinámico autorizado agrega:
 - `PedRutSolicita` proviene del usuario autenticado o de una persona seleccionada por
   un usuario 55/1/90.
 - Los precios se vuelven a consultar en `SSP06MAProducto`.
+- Los tipos con `TPPRAcceso=1` solo se muestran y aceptan al crear pedidos cuando el
+  usuario tiene además 55/1/91. Los tipos con valor 0 están liberados.
+- React informa si el usuario ve el catálogo liberado o el catálogo completo. Una
+  petición manual por un producto restringido responde 403 sin crear el borrador.
 - El detalle toma división, subdivisión y centro de costo desde `FPPersonas`.
 - Guardar crea estado 0; enviar cambia a estado 1.
 - El Casino de la sesión se resuelve por `USUARIOS.UsuRut = SSP06MACasinosPlanta.CASIRut`.
@@ -92,7 +113,8 @@ Los siguientes valores fueron comprobados en `BDADP_CASINO`; son una fotografía
 deben convertirse en constantes:
 
 - 2 casinos, 7 tipos y 75 productos.
-- 15 pedidos históricos, 1.411 unidades en la verificación del historial.
+- 20 pedidos y 55 líneas de pedido en la verificación del 2026-11-17. El último
+  pedido registrado tiene fecha 2026-11-10.
 - 9.186 personas y 7.200 fichas con foto.
 - 25 usuarios de Seguridad para la empresa 1.
 - `JPALMA` y `MANDRADE` son administradores efectivos mediante `ADMINFULL`.
@@ -106,6 +128,8 @@ deben convertirse en constantes:
 | Pedidos | `SSP06OPPedidosPlanta`, `SSP06OPPedidosPlantaDet` |
 | Decisiones del Casino | `SSP06OPPedidosPlantaDecision` |
 | Entregas del Casino | `SSP06OPPedidosPlantaEntrega` |
+| Evaluaciones y pago | `SSP06OPEvalPedidoCasino`, `SSP06OPPedidosPlantaPagoHistorial` |
+| Notificaciones | `SSP06OPCorreoOutbox`, `SSP06OPCorreoIntento` |
 | Catálogo Casino | `SSP06MACasinosPlanta`, `SSP06MADestinosPlanta`, `SSP06MAMotivoPedidos` |
 | Productos | `SSP06MATPProducto`, `SSP06MAProducto` |
 | Personas y ubicación | `FPPersonas`, `FPDivision`, `FPDivisionSub`, `FPCenCos` |
@@ -123,20 +147,21 @@ deben convertirse en constantes:
 
 ## Pendientes conocidos
 
-1. Integrar la notificación del procedimiento `CorreoCasino`. Actualmente enviar cambia
-   el estado a 1, pero no afirma haber enviado correo.
-2. Migrar o resolver `TPPRAcceso`, atributo presente en el XPZ 2021 pero ausente en la
-   tabla actual `SSP06MATPProducto`.
-3. Confirmar los códigos organizacionales de Faenadora San Vicente y Lo Miranda. Solo
+1. Configurar un dominio/remitente verificado y la clave Resend en el entorno de destino;
+   luego habilitar `CASINO_EMAIL_ENABLED` y `CASINO_EMAIL_WORKER_ENABLED`. La cola está
+   implementada, pero el proveedor permanece deshabilitado localmente.
+2. Confirmar los códigos organizacionales de Faenadora San Vicente y Lo Miranda. Solo
    Rosario está homologada; no asignar códigos por parecido de nombre.
-4. Definir si una persona con `PerEstadoLab` inactivo puede crear pedidos.
-5. Realizar validación funcional controlada con usuarios de negocio para creación,
+3. Definir si una persona con `PerEstadoLab` inactivo puede crear pedidos.
+4. Realizar validación funcional controlada con usuarios de negocio para creación,
    envío, filtros históricos y detalle.
-6. Validar funcionalmente aprobación y rechazo con un usuario asociado a cada Casino.
+5. Validar funcionalmente aprobación y rechazo con un usuario asociado a cada Casino.
+6. Completar la recuperación de borradores en React y ofrecer un destino posterior
+   al envío para solicitantes sin el permiso de historial 55/5/6.
 
 ## Verificación vigente
 
-- Backend: 41 pruebas correctas con `node --test` al 2026-11-16, incluidas seis
+- Backend: 56 pruebas correctas con `node --test` al 2026-11-17, incluidas seis
   verificaciones HTTP y tres de compatibilidad de dependencias actualizadas.
 - `npm audit` completo y `--omit=dev`: 0 hallazgos tanto en backend como frontend
   al 2026-11-16. Los gates de ambos proyectos fallan desde severidad baja.
@@ -151,9 +176,25 @@ deben convertirse en constantes:
   `NODE_ENV=production` y usuario `node`. Trivy 0.76.2 informa 0 hallazgos de
   vulnerabilidades en la imagen final. Ping, headers y PNG real con Chromium
   comprobados en un contenedor sin red.
-- Base: `npm run verify:casino` del 2026-11-16 no finalizó por rechazo de login SQL.
-  No se modificaron credenciales ni datos. La diferencia histórica de conteos del
-  verificador continúa pendiente; no fue posible revalidarla en esta ejecución.
+- Base: `BDADP_CASINO_BACKUP_20260803` fue renombrada a `BDADP_CASINO` el
+  2026-11-17. El respaldo completo permanece en el volumen de SQL Server. El
+  verificador acepta crecimiento de las tablas operativas sobre el mínimo importado,
+  en vez de exigir conteos históricos inmutables.
+- El script idempotente `database/20261117_casino_maestros_crud.sql` agregó
+  `TPPRAcceso`, inicializó los siete tipos existentes como liberados y registró los
+  llamados React de los cinco programas 55/10. Se verificó alta, edición y baja en
+  los cinco catálogos y se eliminaron los registros temporales.
+- Se verificó `TPPRAcceso` marcando temporalmente un tipo como restringido: el usuario
+  común recibió seis tipos, el autorizado siete y la petición manipulada fue rechazada.
+  El tipo se restauró a su valor original; 55/1/91 permanece sin asignaciones efectivas.
+- Las cuatro consultas usan estado 3, fecha de entrega del detalle y el importe
+  `PED1Cantidad × PED1Precio`. En 2026 las cuatro conciliaron un total de $10.747.
+- El script `database/20261117_casino_evaluaciones_pago.sql` creó el historial auditable
+  de control de pago. El verificador exige las tablas Casino y valida que el
+  historial no contenga pedidos huérfanos.
+- El script `database/20261117_casino_correo_outbox.sql` creó la outbox y su historial
+  de intentos; el verificador registra ahora once tablas Casino. 55/1/92 se asignó a la
+  plantilla de rol `ADMINFULL`, sin copiar el permiso a usuarios individuales.
 - SQL Server: versión efectiva y actualización CU pendientes en la instancia de
   destino. Hay un diagnóstico de solo lectura en
   `database/20261116_security_version_readonly.sql`.

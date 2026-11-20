@@ -36,8 +36,8 @@ pertenecen al usuario hasta demostrar lo contrario.
 
 - Consultar `sys.tables`, `sys.columns`, claves y restricciones antes de escribir SQL.
 - Usar `BDADP_CASINO`; no modificar directamente `C:\paso\BDADP.mdf` o su LDF.
-- No asumir que un atributo del XPZ existe en la copia de base. Ejemplo conocido:
-  `TPPRAcceso` no está en `SSP06MATPProducto`.
+- No asumir que un atributo del XPZ existe en la copia de base. `TPPRAcceso` fue una
+  brecha conocida y se agregó mediante `database/20261117_casino_maestros_crud.sql`.
 - Tratar resultados contados como observaciones fechadas, no como constantes.
 
 ### Seguridad

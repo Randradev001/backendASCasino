@@ -3,6 +3,7 @@ const { SecurityError } = require('../services/seguridad.service');
 const { hasPermission } = require('../middleware/securityAuthorization');
 
 const canManageOthers = (req) => hasPermission(req.auth?.permissions || {}, { sistema: 55, modulo: 1, programa: 90 });
+const canAccessRestrictedProducts = (req) => hasPermission(req.auth?.permissions || {}, { sistema: 55, modulo: 1, programa: 91 });
 
 const sendError = (res, error) => {
   if (error instanceof SecurityError) {
@@ -14,7 +15,7 @@ const sendError = (res, error) => {
 
 const context = async (req, res) => {
   try {
-    return res.json(await service.getContext(req.context, canManageOthers(req)));
+    return res.json(await service.getContext(req.context, canManageOthers(req), canAccessRestrictedProducts(req)));
   } catch (error) {
     return sendError(res, error);
   }
@@ -22,7 +23,12 @@ const context = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    return res.status(201).json(await service.createDraft(req.body, req.context, canManageOthers(req)));
+    return res.status(201).json(await service.createDraft(
+      req.body,
+      req.context,
+      canManageOthers(req),
+      canAccessRestrictedProducts(req)
+    ));
   } catch (error) {
     return sendError(res, error);
   }

@@ -18,7 +18,7 @@ const config = {
   requestTimeout: 120000
 };
 
-const expectedRows = {
+const minimumRows = {
   SSP06MACasinosPlanta: 2,
   SSP06MADestinosPlanta: 4,
   SSP06MAMotivoPedidos: 6,
@@ -26,10 +26,13 @@ const expectedRows = {
   SSP06MAProducto: 75,
   SSP06OPPedidosPlanta: 15,
   SSP06OPPedidosPlantaDet: 32,
-  SSP06OPEvalPedidoCasino: 14
+  SSP06OPEvalPedidoCasino: 14,
+  SSP06OPPedidosPlantaPagoHistorial: 0,
+  SSP06OPCorreoOutbox: 0,
+  SSP06OPCorreoIntento: 0
 };
 
-const expectedPersonRows = {
+const minimumPersonRows = {
   FPPersonas: 9186,
   FPGrupos: 4,
   FPArea: 12,
@@ -78,25 +81,30 @@ const run = async () => {
       SELECT t.name AS tableName, SUM(CASE WHEN p.index_id IN (0,1) THEN p.rows ELSE 0 END) AS [rowCount]
       FROM sys.tables t
       LEFT JOIN sys.partitions p ON p.object_id=t.object_id
-      WHERE t.name IN (${Object.keys(expectedRows).map((name) => `'${name}'`).join(',')})
+      WHERE t.name IN (${Object.keys(minimumRows).map((name) => `'${name}'`).join(',')})
       GROUP BY t.name;
     `);
 
     const actual = new Map(counts.recordset.map((row) => [row.tableName, Number(row.rowCount)]));
-    for (const [table, expected] of Object.entries(expectedRows)) {
-      if (actual.get(table) !== expected) fail(`${table}: se esperaban ${expected} filas y se encontraron ${actual.get(table) ?? 0}.`);
+    for (const [table, minimum] of Object.entries(minimumRows)) {
+      if (!actual.has(table)) fail(`${table}: falta la tabla requerida.`);
+      if ((actual.get(table) ?? 0) < minimum) {
+        fail(`${table}: se esperaban al menos ${minimum} filas y se encontraron ${actual.get(table) ?? 0}.`);
+      }
     }
 
     const personCounts = await pool.request().query(`
       SELECT t.name AS tableName, SUM(CASE WHEN p.index_id IN (0,1) THEN p.rows ELSE 0 END) AS [rowCount]
       FROM sys.tables t
       LEFT JOIN sys.partitions p ON p.object_id=t.object_id
-      WHERE t.name IN (${Object.keys(expectedPersonRows).map((name) => `'${name}'`).join(',')})
+      WHERE t.name IN (${Object.keys(minimumPersonRows).map((name) => `'${name}'`).join(',')})
       GROUP BY t.name;
     `);
     const actualPersonRows = new Map(personCounts.recordset.map((row) => [row.tableName, Number(row.rowCount)]));
-    for (const [table, expected] of Object.entries(expectedPersonRows)) {
-      if (actualPersonRows.get(table) !== expected) fail(`${table}: se esperaban ${expected} filas y se encontraron ${actualPersonRows.get(table) ?? 0}.`);
+    for (const [table, minimum] of Object.entries(minimumPersonRows)) {
+      if ((actualPersonRows.get(table) ?? 0) < minimum) {
+        fail(`${table}: se esperaban al menos ${minimum} filas y se encontraron ${actualPersonRows.get(table) ?? 0}.`);
+      }
     }
     if (Number(summary.peopleWithPhoto) !== 7200) fail(`FPPersonas: se esperaban 7200 fichas con foto y se encontraron ${summary.peopleWithPhoto}.`);
 
@@ -122,6 +130,11 @@ const run = async () => {
       LEFT JOIN dbo.SSP06OPPedidosPlanta P ON P.GECODEMP=E.GECODEMP AND P.PEDNumero=E.PEDNumero
       WHERE P.GECODEMP IS NULL
       UNION ALL
+      SELECT 'Historial de pago sin pedido', COUNT(*)
+      FROM dbo.SSP06OPPedidosPlantaPagoHistorial H
+      LEFT JOIN dbo.SSP06OPPedidosPlanta P ON P.GECODEMP=H.GECODEMP AND P.PEDNumero=H.PEDNumero
+      WHERE P.GECODEMP IS NULL
+      UNION ALL
       SELECT 'Estado de pedido invalido', COUNT(*)
       FROM dbo.SSP06OPPedidosPlanta
       WHERE PedEstadoIngreso NOT IN (0,1,2,3,5);
@@ -137,8 +150,8 @@ const run = async () => {
       { verificacion: 'Personas disponibles', resultado: Number(summary.people) },
       { verificacion: 'Fichas con foto', resultado: Number(summary.peopleWithPhoto) },
       { verificacion: 'Usuarios Seguridad', resultado: Number(summary.securityUsers) },
-      { verificacion: 'Tablas Casino', resultado: Object.keys(expectedRows).length },
-      { verificacion: 'Tablas Personas', resultado: Object.keys(expectedPersonRows).length },
+      { verificacion: 'Tablas Casino', resultado: Object.keys(minimumRows).length },
+      { verificacion: 'Tablas Personas', resultado: Object.keys(minimumPersonRows).length },
       { verificacion: 'Maestros CONEX', resultado: 0 }
     ]);
   } finally {

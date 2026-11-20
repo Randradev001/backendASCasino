@@ -220,18 +220,32 @@ const createSession = async (pool, login, empCod, remember) => {
   return { token, expiresAt };
 };
 
-const login = async ({ rut, password, empCod, remember = false }) => {
-  const { rutNumber } = parseRut(rut);
-  if (!password) throw new SecurityError(400, 'VALIDATION_ERROR', 'RUT y clave son obligatorios.');
+const login = async ({ email, password, empCod, remember = false }) => {
+  const correo = String(email || '').trim();
+  if (!correo || !password) throw new SecurityError(400, 'VALIDATION_ERROR', 'Correo y clave son obligatorios.');
+  if (correo.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    throw new SecurityError(400, 'VALIDATION_ERROR', 'Ingrese un correo valido.');
+  }
 
   const pool = await getPool();
-  const candidates = await getUsersByRut(pool, rutNumber, empCod ? Number(empCod) : null);
+  const candidatesResult = await pool.request().input('correo', sql.VarChar(254), correo).query(`
+    SELECT UE.GECODEMP, U.UsuLogin, U.Usunom, U.UsuClave, U.UsuCorreo, U.UsuCargo,
+           U.UsuNseg, UE.UsuEstado, UE.UsuPerfil, UE.UsuTipo, RTRIM(E.EmpNom) AS EmpNom
+    FROM USUARIOS U
+    INNER JOIN SEGUSUEMP UE ON UE.UsuLogin=U.UsuLogin
+    INNER JOIN DEFEMP E ON E.EmpCod=UE.GECODEMP
+    WHERE LOWER(LTRIM(RTRIM(U.UsuCorreo)))=LOWER(@correo)
+  `);
+  const candidates = candidatesResult.recordset;
   const validUsers = [];
   for (const candidate of candidates) {
     if (candidate.UsuEstado === 1 && await verifyCredentials(pool, candidate, String(password))) validUsers.push(candidate);
   }
   if (!validUsers.length) {
     throw new SecurityError(401, 'INVALID_CREDENTIALS', 'Usuario o clave incorrectos.');
+  }
+  if (new Set(validUsers.map((user) => normalizeLogin(user.UsuLogin))).size > 1) {
+    throw new SecurityError(409, 'AMBIGUOUS_EMAIL', 'El correo esta asociado a mas de un usuario. Contacte al administrador de Seguridad.');
   }
 
   const companies = await getCompanies(pool, validUsers);

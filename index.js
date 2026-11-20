@@ -17,7 +17,7 @@ app.get('/ping', (req, res) => {
 });
 
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3001,http://127.0.0.1:3001,http://localhost:5173,http://127.0.0.1:5173')
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:5173,http://127.0.0.1:5173')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -96,6 +96,7 @@ const port = Number(process.env.PORT || 3000);
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`Servidor corriendo en puerto: ${port}`);
+    require('./src/workers/casinoCorreo.worker').start();
   });
 }
 

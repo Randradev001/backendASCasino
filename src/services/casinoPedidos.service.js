@@ -1,5 +1,6 @@
 const { getPool, sql } = require('../conectorMysql/conectorSqlServer');
 const { SecurityError } = require('./seguridad.service');
+const { enqueueOrderEvent } = require('./casinoCorreoOutbox.service');
 const {
   normalizeOrderPayload,
   resolveRequesterRut,
@@ -78,13 +79,14 @@ const loadPerson = async (executor, empCod, rut) => {
   };
 };
 
-const getContext = async (context, canManageOthers = false) => {
+const getContext = async (context, canManageOthers = false, canAccessRestrictedProducts = false) => {
   const session = assertContext(context);
   const pool = await getPool();
   const authenticated = await loadAuthenticatedUser(pool, session);
   const [requester, catalogs] = await Promise.all([
     loadPerson(pool, session.empCod, authenticated.rut),
-    pool.request().input('empCod', sql.Int, session.empCod).query(`
+    pool.request().input('empCod', sql.Int, session.empCod)
+      .input('canAccessRestricted', sql.Bit, canAccessRestrictedProducts ? 1 : 0).query(`
       SELECT CASICod, RTRIM(CASINom) CASINom FROM SSP06MACasinosPlanta
       WHERE GECODEMP=@empCod ORDER BY CASINom;
 
@@ -94,13 +96,16 @@ const getContext = async (context, canManageOthers = false) => {
       SELECT Mot6Cod, RTRIM(Mot6Descrip) Mot6Descrip FROM SSP06MAMotivoPedidos
       WHERE GECODEMP=@empCod ORDER BY Mot6Descrip;
 
-      SELECT TPPRCod, RTRIM(TPPRNombre) TPPRNombre, TPPROrden FROM SSP06MATPProducto
-      WHERE GECODEMP=@empCod ORDER BY TPPROrden, TPPRNombre;
+      SELECT TPPRCod, RTRIM(TPPRNombre) TPPRNombre, TPPROrden,COALESCE(TPPRAcceso,0) TPPRAcceso
+      FROM SSP06MATPProducto
+      WHERE GECODEMP=@empCod AND (COALESCE(TPPRAcceso,0)=0 OR @canAccessRestricted=1)
+      ORDER BY TPPROrden, TPPRNombre;
 
       SELECT P.PRODCodigo, P.TPPRCod, RTRIM(P.ProdNombre) ProdNombre, P.PRODPrecio, P.CASICod
       FROM SSP06MAProducto P
       INNER JOIN SSP06MATPProducto T ON T.GECODEMP=P.GECODEMP AND T.TPPRCod=P.TPPRCod
-      WHERE P.GECODEMP=@empCod ORDER BY T.TPPROrden, P.ProdNombre;
+      WHERE P.GECODEMP=@empCod AND (COALESCE(T.TPPRAcceso,0)=0 OR @canAccessRestricted=1)
+      ORDER BY T.TPPROrden, P.ProdNombre;
     `)
   ]);
 
@@ -108,20 +113,21 @@ const getContext = async (context, canManageOthers = false) => {
     company: session.empCod,
     login: session.login,
     canManageOthers: Boolean(canManageOthers),
+    canAccessRestrictedProducts: Boolean(canAccessRestrictedProducts),
     requester,
     catalogs: {
       casinos: (catalogs.recordsets[0] || []).map((row) => ({ id: number(row.CASICod), name: clean(row.CASINom) })),
       destinations: (catalogs.recordsets[1] || []).map((row) => ({ id: number(row.DESTICod), name: clean(row.DESTINom) })),
       motives: (catalogs.recordsets[2] || []).map((row) => ({ id: number(row.Mot6Cod), name: clean(row.Mot6Descrip) })),
       categories: (catalogs.recordsets[3] || []).map((row) => ({
-        id: number(row.TPPRCod), name: clean(row.TPPRNombre), order: number(row.TPPROrden)
+        id: number(row.TPPRCod), name: clean(row.TPPRNombre), order: number(row.TPPROrden), access: number(row.TPPRAcceso)
       })),
       products: (catalogs.recordsets[4] || []).map((row) => ({
         id: number(row.PRODCodigo), categoryId: number(row.TPPRCod), name: clean(row.ProdNombre),
         price: number(row.PRODPrecio), casinoId: number(row.CASICod)
       }))
     },
-    compatibility: { categoryAccessPending: true, emailNotificationAvailable: false }
+    compatibility: { categoryAccessPending: false, emailNotificationAvailable: false }
   };
 };
 
@@ -146,7 +152,7 @@ const nextOrderNumber = async (transaction, empCod) => {
   return Number(result.recordset[0].value);
 };
 
-const validateCatalogs = async (transaction, session, input) => {
+const validateCatalogs = async (transaction, session, input, canAccessRestrictedProducts = false) => {
   const catalogResult = await new sql.Request(transaction)
     .input('empCod', sql.Int, session.empCod)
     .input('casinoId', sql.Decimal(10, 0), input.casinoId)
@@ -161,19 +167,30 @@ const validateCatalogs = async (transaction, session, input) => {
   if (!catalogResult.recordsets[1]?.length) throw new SecurityError(400, 'INVALID_DESTINATION', 'El destino seleccionado no existe.');
   if (!catalogResult.recordsets[2]?.length) throw new SecurityError(400, 'INVALID_MOTIVE', 'El motivo seleccionado no existe.');
 
-  const productsRequest = new sql.Request(transaction).input('empCod', sql.Int, session.empCod);
+  const productsRequest = new sql.Request(transaction)
+    .input('empCod', sql.Int, session.empCod);
   const placeholders = input.lines.map((line, index) => {
     productsRequest.input(`product${index}`, sql.Decimal(10, 0), line.productCode);
     return `@product${index}`;
   });
   const productsResult = await productsRequest.query(`
-    SELECT PRODCodigo, RTRIM(ProdNombre) ProdNombre, PRODPrecio, CASICod
-    FROM SSP06MAProducto WHERE GECODEMP=@empCod AND PRODCodigo IN (${placeholders.join(',')});
+    SELECT P.PRODCodigo, RTRIM(P.ProdNombre) ProdNombre, P.PRODPrecio, P.CASICod,
+      COALESCE(T.TPPRAcceso,0) TPPRAcceso
+    FROM SSP06MAProducto P
+    INNER JOIN SSP06MATPProducto T ON T.GECODEMP=P.GECODEMP AND T.TPPRCod=P.TPPRCod
+    WHERE P.GECODEMP=@empCod AND P.PRODCodigo IN (${placeholders.join(',')});
   `);
   const products = new Map(productsResult.recordset.map((row) => [number(row.PRODCodigo), row]));
   for (const line of input.lines) {
     const product = products.get(line.productCode);
     if (!product) throw new SecurityError(400, 'INVALID_PRODUCT', `El producto ${line.productCode} no existe.`);
+    if (number(product.TPPRAcceso) === 1 && !canAccessRestrictedProducts) {
+      throw new SecurityError(
+        403,
+        'RESTRICTED_PRODUCT_ACCESS_REQUIRED',
+        `${clean(product.ProdNombre)} pertenece a un tipo restringido. Se requiere el permiso 55/1/91.`
+      );
+    }
     if (number(product.CASICod) !== input.casinoId) {
       throw new SecurityError(400, 'PRODUCT_CASINO_MISMATCH', `${clean(product.ProdNombre)} no pertenece al casino seleccionado.`);
     }
@@ -181,7 +198,7 @@ const validateCatalogs = async (transaction, session, input) => {
   return products;
 };
 
-const createDraft = async (body, context, canManageOthers = false) => {
+const createDraft = async (body, context, canManageOthers = false, canAccessRestrictedProducts = false) => {
   const session = assertContext(context);
   const input = normalizeOrderPayload(body);
   const pool = await getPool();
@@ -202,7 +219,7 @@ const createDraft = async (body, context, canManageOthers = false) => {
         missingFields: locationError.missingFields
       });
     }
-    const products = await validateCatalogs(transaction, session, input);
+    const products = await validateCatalogs(transaction, session, input, canAccessRestrictedProducts);
     const orderNumber = await nextOrderNumber(transaction, session.empCod);
 
     await new sql.Request(transaction)
@@ -305,8 +322,9 @@ const sendOrder = async (numberValue, context, canManageOthers = false) => {
       .input('orderNumber', sql.Decimal(10, 0), orderNumber)
       .query(`UPDATE SSP06OPPedidosPlanta SET PedEstadoIngreso=1
               WHERE GECODEMP=@empCod AND PEDNumero=@orderNumber;`);
+    await enqueueOrderEvent(transaction, { empCod: session.empCod, orderNumber, eventType: 'ORDER_SENT', login: session.login });
     await transaction.commit();
-    return { number: orderNumber, status: 1, statusLabel: 'Enviado al casino', emailNotificationSent: false };
+    return { number: orderNumber, status: 1, statusLabel: 'Enviado al casino', emailNotificationQueued: true };
   } catch (error) {
     await transaction.rollback();
     throw error;

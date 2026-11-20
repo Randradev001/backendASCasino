@@ -151,7 +151,7 @@ Por estos puntos, la pantalla se clasifica como **referencia visual/prototipo**,
 
 - Permiso base 55/1/1 para consultar y operar Pedidos a Casino.
 - Permiso 55/1/90 para seleccionar otra persona y administrar/anular pedidos ajenos.
-- Permiso 55/1/91 para categorías restringidas, si el negocio confirma que esta regla sigue vigente.
+- Permiso 55/1/91 para categorías restringidas. No reemplaza el permiso base 55/1/1.
 - `req.context.empCod` y `req.context.login` como únicas fuentes de empresa y usuario.
 - Un usuario sin 55/1/90 solo puede crear y modificar sus propios borradores.
 - Toda lectura y mutación debe incluir `GECODEMP` de la sesión.
@@ -162,14 +162,12 @@ En la base revisada, tres usuarios tienen 55/1/1 y dos de ellos también 55/1/90
 
 ## Brecha de versión en la base nueva
 
-El XPZ 2021 utiliza `TPPRAcceso` en la transacción `SSP06MATPProducto`, con valores `Liberado: 0` y `Restringido: 1`. La tabla actual `BDADP_CASINO.dbo.SSP06MATPProducto` no contiene esa columna porque la fuente de datos migrada corresponde a una versión anterior.
-
-Antes de implementar el filtro 55/1/91 se requiere una decisión:
-
-- Agregar `TPPRAcceso` con valor inicial 0 y permitir que el negocio clasifique categorías restringidas; o
-- Retirar formalmente la regla 55/1/91 y documentar que todos los tipos están disponibles.
-
-No se debe simular esta regla únicamente en React.
+El XPZ 2021 utiliza `TPPRAcceso` en la transacción `SSP06MATPProducto`, con valores
+`Liberado: 0` y `Restringido: 1`. La migración agregó la columna, inicializó los tipos
+preexistentes en 0 y permite clasificarlos desde el maestro. La regla se aplica en el
+backend al consultar el catálogo y al guardar, no únicamente en React. El programa
+55/1/91 existe en Seguridad como `Acceso todos productos`; su asignación queda bajo
+administración explícita de usuarios y roles.
 
 ## Propuesta de experiencia nueva
 
@@ -209,9 +207,9 @@ El precio debe obtenerse de `SSP06MAProducto` en el backend. El número debe gen
 - Estudio XPZ: completado.
 - Contraste con `ProyectoADPpersonas.xpz`: completado para `PrPersonas`.
 - Contraste con `BDADP_CASINO`: completado.
-- Endpoint operacional: no implementado.
-- Pantalla React: no implementada.
-- Decisión `TPPRAcceso/55-1-91`: pendiente.
-- Política de producto duplicado: pendiente.
+- Endpoint operacional: implementado.
+- Pantalla React: implementada.
+- Decisión `TPPRAcceso/55-1-91`: implementada y verificada.
+- Política de producto duplicado: se rechaza el mismo producto repetido en una solicitud.
 - Validación de persona activa: pendiente de confirmación de negocio.
 - Integración de correo: pendiente de estudiar `CorreoCasino` y su infraestructura.

@@ -169,19 +169,25 @@ const getHistory = async (query, context) => {
 
 const getOrderDetail = async (numberValue, context) => {
   const empCod = assertCompany(context);
+  const login = clean(context?.login).toUpperCase();
   const orderNumber = Number(numberValue);
   if (!Number.isInteger(orderNumber) || orderNumber < 1) throw new SecurityError(400, 'VALIDATION_ERROR', 'El numero de pedido no es valido.');
   const pool = await getPool();
-  const result = await pool.request().input('empCod', sql.Int, empCod).input('orderNumber', sql.Decimal(10, 0), orderNumber).query(`
+  const result = await pool.request().input('empCod', sql.Int, empCod).input('login', sql.VarChar(10), login).input('orderNumber', sql.Decimal(10, 0), orderNumber).query(`
     SELECT P.PEDNumero,P.PEDDescripcion,P.PEDFechaCrea,P.pedfechaEntrega,P.PedHHEntrega,P.PedEstadoIngreso,
            P.PedRutSolicita,RTRIM(P.PEDSolicita) PEDSolicita,RTRIM(ISNULL(PE.PernombreCom,'')) RequesterName,
            RTRIM(ISNULL(C.CASINom,'Casino sin nombre')) Casino,RTRIM(ISNULL(DE.DESTINom,'Destino sin nombre')) Destination,
-           RTRIM(ISNULL(M.Mot6Descrip,'Sin motivo')) Motive
+           RTRIM(ISNULL(M.Mot6Descrip,'Sin motivo')) Motive,P.PEDControlPago,
+           ISNULL(E.EVPedEvaluacion,0) Evaluation,RTRIM(ISNULL(E.EvPedObsUsuario,'')) UserComment,
+           RTRIM(ISNULL(E.EVPEDOBSCasino,'')) CasinoComment,E.EVPEDFecha EvaluationAt,
+           CASE WHEN P.PedEstadoIngreso=3 AND P.PedRutSolicita=U.UsuRut THEN 1 ELSE 0 END CanEvaluate
     FROM SSP06OPPedidosPlanta P
     LEFT JOIN FPPersonas PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
     LEFT JOIN SSP06MACasinosPlanta C ON C.GECODEMP=P.GECODEMP AND C.CASICod=P.CASICod
     LEFT JOIN SSP06MADestinosPlanta DE ON DE.GECODEMP=P.GECODEMP AND DE.DESTICod=P.DESTICod
     LEFT JOIN SSP06MAMotivoPedidos M ON M.GECODEMP=P.GECODEMP AND M.Mot6Cod=P.Mot6Cod
+    LEFT JOIN SSP06OPEvalPedidoCasino E ON E.GECODEMP=P.GECODEMP AND E.EVPedCod=1 AND E.PEDNumero=P.PEDNumero
+    LEFT JOIN USUARIOS U ON RTRIM(U.UsuLogin)=@login
     WHERE P.GECODEMP=@empCod AND P.PEDNumero=@orderNumber;
 
     SELECT D.PRODCodigo,RTRIM(ISNULL(PR.ProdNombre,'Producto sin nombre')) ProductName,
@@ -211,6 +217,9 @@ const getOrderDetail = async (numberValue, context) => {
     deliveryAt: header.pedfechaEntrega, deliveryTime: header.PedHHEntrega, status: Number(header.PedEstadoIngreso),
     statusLabel: statusLabel(header.PedEstadoIngreso), requesterRut: numeric(header.PedRutSolicita), requesterName: clean(header.RequesterName),
     requestedBy: clean(header.PEDSolicita), casino: clean(header.Casino), destination: clean(header.Destination), motive: clean(header.Motive),
+    paymentControl: numeric(header.PEDControlPago),
+    evaluation: { value: numeric(header.Evaluation), userComment: clean(header.UserComment), casinoComment: clean(header.CasinoComment), at: header.EvaluationAt || null },
+    canEvaluate: numeric(header.CanEvaluate) === 1,
     lines, quantity: lines.reduce((sum, line) => sum + line.quantity, 0), amount: lines.reduce((sum, line) => sum + line.amount, 0)
   };
 };

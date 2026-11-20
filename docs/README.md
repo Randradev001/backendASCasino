@@ -25,6 +25,12 @@ documentación distingue el estado actual de ADP Casino de estudios históricos 
 10. [Remediación de dependencias y evidencias 2026-11-16](migration/security-remediation-2026-11-16.md):
     versiones, auditorías completas, parche local, pruebas e imagen Docker.
 
+11. [Alcance funcional de Casino](migration/casino-alcance-funcional.md): cobertura de
+    maestros, operación y consultas mensuales, revisada contra el modelo GeneXus y el
+    esquema adjunto.
+12. [Evaluaciones, pagos y correo](migration/casino-evaluaciones-pago-correo.md): reglas,
+    outbox transaccional, procesador y configuración segura del proveedor.
+
 ## Organización
 
 - `docs/ai/`: contexto canónico y operativo para continuidad.

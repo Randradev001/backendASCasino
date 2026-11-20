@@ -12,6 +12,7 @@
     "security:smoke": "node --test test/httpSecurity.test.js",
     "security:gate": "npm audit --audit-level=low && npm run security:smoke",
     "test": "node --test",
+    "dev": "node --watch index.js",
     "start": "node index.js"
   },
   "keywords": [],

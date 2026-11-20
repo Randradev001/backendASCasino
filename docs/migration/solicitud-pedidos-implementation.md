@@ -26,11 +26,11 @@ captura. La migración crea encabezado y líneas en una sola transacción al gua
 borrador. Esto conserva el número y las tablas finales, pero evita cabeceras huérfanas
 si el usuario abandona la pantalla.
 
-La tabla migrada `SSP06MATPProducto` todavía no contiene `TPPRAcceso`, presente en la
-versión 2021 del XPZ. Hasta migrar ese atributo, el catálogo actual se publica completo;
-no se replica esa regla de acceso en React. El envío por correo de `CorreoCasino` queda
-como dependencia pendiente: el envío cambia el estado a 1, pero no afirma haber enviado
-un correo.
+`SSP06MATPProducto` contiene `TPPRAcceso` desde el script idempotente
+`20261117_casino_maestros_crud.sql`. El valor 0 publica el tipo como liberado; el valor
+1 exige además 55/1/91. El backend filtra el contexto y vuelve a validar cada producto
+dentro de la transacción. El envío por correo de `CorreoCasino` queda como dependencia
+pendiente: el envío cambia el estado a 1, pero no afirma haber enviado un correo.
 
 En la experiencia React, `Crear y enviar` muestra un resumen de confirmación antes de
 escribir. Tras una respuesta exitosa de creación y envío, navega a

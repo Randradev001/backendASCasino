@@ -7,6 +7,7 @@ const {
   getMissingRequesterLocationFields,
   buildRequesterLocationError
 } = require('../src/services/casinoPedidos.rules');
+const { hasPermission } = require('../src/middleware/securityAuthorization');
 
 const validPayload = {
   requesterRut: 12911839,
@@ -63,6 +64,13 @@ test('el solicitante normal queda fijado por la sesion', () => {
 
 test('55/1/90 puede elegir a otra persona de la empresa', () => {
   assert.equal(resolveRequesterRut({ authenticatedRut: 14332241, requestedRut: 12911839, canManageOthers: true }), 12911839);
+});
+
+test('55/1/91 habilita tipos de producto restringidos sin reemplazar 55/1/1', () => {
+  const permissions = { programas: [{ SistCod: 55, Modcod: 1, ProgCod: 91 }] };
+  assert.equal(hasPermission(permissions, { sistema: 55, modulo: 1, programa: 91 }), true);
+  assert.equal(hasPermission(permissions, { sistema: 55, modulo: 1, programa: 1 }), false);
+  assert.equal(hasPermission({ programas: [] }, { sistema: 55, modulo: 1, programa: 91 }), false);
 });
 
 test('informa exactamente los datos organizacionales que faltan en la ficha', () => {

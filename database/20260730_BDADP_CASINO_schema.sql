@@ -227,8 +227,10 @@ CREATE TABLE dbo.SSP06MATPProducto (
   TPPRCod decimal(10,0) NOT NULL,
   TPPRNombre char(40) NOT NULL,
   TPPROrden smallint NOT NULL,
+  TPPRAcceso smallint NULL,
   CONSTRAINT PK_SSP06MATPProducto PRIMARY KEY (GECODEMP, TPPRCod),
-  CONSTRAINT FK_SSP06MATPProducto_G_Emp FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp (GECODEMP)
+  CONSTRAINT FK_SSP06MATPProducto_G_Emp FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp (GECODEMP),
+  CONSTRAINT CK_SSP06MATPProducto_Acceso CHECK (TPPRAcceso IS NULL OR TPPRAcceso IN (0,1))
 );
 
 CREATE TABLE dbo.SSP06MAProducto (
@@ -377,6 +379,45 @@ CREATE TABLE dbo.SSP06OPEvalPedidoCasino (
 );
 
 CREATE INDEX IX_SSP06OPEvalPedidoCasino_Pedido ON dbo.SSP06OPEvalPedidoCasino (GECODEMP, PEDNumero);
+
+CREATE TABLE dbo.SSP06OPPedidosPlantaPagoHistorial (
+  GECODEMP decimal(10,0) NOT NULL,
+  PEDNumero decimal(10,0) NOT NULL,
+  Secuencia int IDENTITY(1,1) NOT NULL,
+  EstadoAnterior smallint NOT NULL,
+  EstadoNuevo smallint NOT NULL,
+  Motivo varchar(200) NULL,
+  Origen varchar(20) NOT NULL,
+  UsuLogin varchar(10) NOT NULL,
+  FechaRegistro datetime2 NOT NULL,
+  CONSTRAINT PK_SSP06OPPedidosPlantaPagoHistorial PRIMARY KEY (GECODEMP,PEDNumero,Secuencia),
+  CONSTRAINT FK_SSP06OPPedidosPlantaPagoHistorial_Pedido FOREIGN KEY (GECODEMP,PEDNumero)
+    REFERENCES dbo.SSP06OPPedidosPlanta (GECODEMP,PEDNumero),
+  CONSTRAINT CK_SSP06OPPedidosPlantaPagoHistorial_Estados CHECK (EstadoAnterior IN (0,1,2) AND EstadoNuevo IN (1,2)),
+  CONSTRAINT CK_SSP06OPPedidosPlantaPagoHistorial_Origen CHECK (Origen IN ('EVALUACION','CASINO'))
+);
+
+CREATE TABLE dbo.SSP06OPCorreoOutbox (
+  GECODEMP decimal(10,0) NOT NULL, CorreoId bigint IDENTITY(1,1) NOT NULL,
+  Idempotencia varchar(120) NOT NULL, PEDNumero decimal(10,0) NULL, TipoEvento varchar(40) NOT NULL,
+  Destinatario varchar(254) NOT NULL, Asunto varchar(200) NOT NULL, Datos nvarchar(max) NOT NULL,
+  Estado varchar(12) NOT NULL, Intentos smallint NOT NULL DEFAULT 0, DisponibleDesde datetime2 NOT NULL,
+  BloqueadoHasta datetime2 NULL, EnviadoEn datetime2 NULL, ProveedorId varchar(120) NULL,
+  UltimoError varchar(500) NULL, CreadoEn datetime2 NOT NULL, CreadoPor varchar(10) NOT NULL,
+  CONSTRAINT PK_SSP06OPCorreoOutbox PRIMARY KEY (GECODEMP,CorreoId),
+  CONSTRAINT UQ_SSP06OPCorreoOutbox_Idempotencia UNIQUE (GECODEMP,Idempotencia),
+  CONSTRAINT FK_SSP06OPCorreoOutbox_Pedido FOREIGN KEY (GECODEMP,PEDNumero) REFERENCES dbo.SSP06OPPedidosPlanta(GECODEMP,PEDNumero),
+  CONSTRAINT CK_SSP06OPCorreoOutbox_Estado CHECK (Estado IN ('PENDIENTE','PROCESANDO','ENVIADO','ERROR','CANCELADO')),
+  CONSTRAINT CK_SSP06OPCorreoOutbox_DatosJson CHECK (ISJSON(Datos)=1)
+);
+CREATE INDEX IX_SSP06OPCorreoOutbox_Cola ON dbo.SSP06OPCorreoOutbox(Estado,DisponibleDesde,BloqueadoHasta);
+
+CREATE TABLE dbo.SSP06OPCorreoIntento (
+  GECODEMP decimal(10,0) NOT NULL, CorreoId bigint NOT NULL, Intento smallint NOT NULL,
+  Fecha datetime2 NOT NULL, Exitoso bit NOT NULL, ProveedorId varchar(120) NULL, Error varchar(500) NULL,
+  CONSTRAINT PK_SSP06OPCorreoIntento PRIMARY KEY (GECODEMP,CorreoId,Intento),
+  CONSTRAINT FK_SSP06OPCorreoIntento_Outbox FOREIGN KEY (GECODEMP,CorreoId) REFERENCES dbo.SSP06OPCorreoOutbox(GECODEMP,CorreoId)
+);
 
 /* Correlativo y cola de correo usados por el modulo original. */
 CREATE TABLE dbo.MACorrelativos (

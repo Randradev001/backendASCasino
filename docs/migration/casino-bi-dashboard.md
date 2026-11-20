@@ -12,7 +12,7 @@ El XPZ `ProyectoADP-casino.xpz` contiene las consultas `SSP06ConsultaAnualTipoPr
 - 55/5/2: Consumos por Centro Costo.
 - 55/5/3: Consumos por Persona.
 - 55/5/4: Pedidos por Motivo.
-- 55/5/5: Descarga Datos Pedidos.
+- 55/5/5: Descarga Datos Pedidos, migrada a `/casino/consultas/descarga-general`.
 
 El endpoint `GET /casino/bi/pedidos` conserva el acceso operativo 55/1/1 y también
 acepta cualquiera de los permisos de consulta 55/5/1 a 55/5/6, directos o heredados por
