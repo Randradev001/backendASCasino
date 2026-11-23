@@ -22,6 +22,7 @@ mensuales solicitadas, revisada el 2026-11-16.
 
 ```text
 React/MUI
+  -> entrada publica /casino
   -> /backendDocker
   -> authContext (sesión, empCod, login)
   -> middleware de permisos
@@ -32,6 +33,10 @@ React/MUI
 
 La cookie de sesión es `HttpOnly`. El frontend nunca decide la empresa ni autoriza una
 acción por sí mismo.
+
+La compilación del frontend usa `/casino` como ruta base. En el dominio previsto, la
+entrada pública es `https://www.adpsmart.cl/casino/`; las rutas React de las tablas
+inferiores son relativas a esa base.
 
 El backend aplica además límites de cuerpo, rate limit al login, respuestas de error
 JSON sin stack, `Cache-Control: no-store` y headers defensivos. CORS sigue admitiendo
