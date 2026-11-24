@@ -57,7 +57,7 @@ const historyCte = (filters) => `
       ON PR.GECODEMP=D.GECODEMP AND PR.PRODCodigo=D.PRODCodigo
     LEFT JOIN SSP06MATPProducto T
       ON T.GECODEMP=PR.GECODEMP AND T.TPPRCod=PR.TPPRCod
-    LEFT JOIN FPPersonas PE
+    LEFT JOIN SSP06VWSolicitanteHistorico PE
       ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
     WHERE ${historyWhere(filters)}
   )`;
@@ -182,7 +182,7 @@ const getOrderDetail = async (numberValue, context) => {
            RTRIM(ISNULL(E.EVPEDOBSCasino,'')) CasinoComment,E.EVPEDFecha EvaluationAt,
            CASE WHEN P.PedEstadoIngreso=3 AND P.PedRutSolicita=U.UsuRut THEN 1 ELSE 0 END CanEvaluate
     FROM SSP06OPPedidosPlanta P
-    LEFT JOIN FPPersonas PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
+    LEFT JOIN SSP06VWSolicitanteHistorico PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
     LEFT JOIN SSP06MACasinosPlanta C ON C.GECODEMP=P.GECODEMP AND C.CASICod=P.CASICod
     LEFT JOIN SSP06MADestinosPlanta DE ON DE.GECODEMP=P.GECODEMP AND DE.DESTICod=P.DESTICod
     LEFT JOIN SSP06MAMotivoPedidos M ON M.GECODEMP=P.GECODEMP AND M.Mot6Cod=P.Mot6Cod

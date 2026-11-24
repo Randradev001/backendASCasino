@@ -59,7 +59,8 @@ documentos `docs/ai/` actualizados.
 - Los precios se leen desde `SSP06MAProducto` al guardar; nunca aceptar el precio del
   navegador como dato autoritativo.
 - El producto debe pertenecer al casino seleccionado.
-- `DivId`, `SdiId` y `CecId` se obtienen de `FPPersonas` para el solicitante.
+- `DivId`, `SdiId` y `CecId` se obtienen de `SSP06MASolicitante`; `FPPersonas` queda
+  como fuente histórica de la ficha de Personas y respaldo de visualización de pedidos antiguos.
 - El solicitante común proviene de `USUARIOS.UsuRut`. Solo 55/1/90 puede escoger otra
   persona de la empresa autenticada.
 - Estados compatibles: 0 borrador, 1 enviado, 2 en preparación, 3 entregado y 5 anulado.

@@ -38,11 +38,11 @@ const detail = async (idValue, context) => {
 const retry = async (idValue, context) => {
   const current = session(context); const id = parseMailId(idValue); const result = await (await getPool()).request().input('empCod', sql.Int, current.empCod).input('id', sql.BigInt, id).query(`
     DECLARE @recipient varchar(254);
-    SELECT @recipient=CASE WHEN O.TipoEvento='ORDER_SENT' THEN RTRIM(C.CASIEmail) ELSE RTRIM(F.PerEmail) END
+    SELECT @recipient=CASE WHEN O.TipoEvento='ORDER_SENT' THEN RTRIM(C.CASIEmail) ELSE RTRIM(S.SOLEmail) END
     FROM SSP06OPCorreoOutbox O
     LEFT JOIN SSP06OPPedidosPlanta P ON P.GECODEMP=O.GECODEMP AND P.PEDNumero=O.PEDNumero
     LEFT JOIN SSP06MACasinosPlanta C ON C.GECODEMP=P.GECODEMP AND C.CASICod=P.CASICod
-    LEFT JOIN FPPersonas F ON F.GECODEMP=P.GECODEMP AND F.PerRut=P.PedRutSolicita
+    LEFT JOIN SSP06MASolicitante S ON S.GECODEMP=P.GECODEMP AND S.SOLRut=P.PedRutSolicita
     WHERE O.GECODEMP=@empCod AND O.CorreoId=@id;
     UPDATE SSP06OPCorreoOutbox SET Destinatario=COALESCE(NULLIF(LTRIM(RTRIM(@recipient)),''),Destinatario),
       Estado=CASE WHEN NULLIF(LTRIM(RTRIM(COALESCE(@recipient,Destinatario))), '') IS NULL THEN 'ERROR' ELSE 'PENDIENTE' END,

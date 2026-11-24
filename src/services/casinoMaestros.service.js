@@ -8,40 +8,40 @@ const numeric = (value) => Number(value || 0);
 const CONFIG = {
   casinos: {
     table: 'SSP06MACasinosPlanta', id: 'CASICod', idType: sql.Decimal(10, 0),
-    source: `SELECT M.CASICod id,RTRIM(M.CASINom) name,M.CASIRut rut,RTRIM(M.CASIDV) dv,
-      RTRIM(M.CASIEmail) email,
+    source: `SELECT M.CASICod id,RTRIM(M.CASICodigoExterno) externalCode,RTRIM(M.CASINom) name,M.CASIRut rut,RTRIM(M.CASIDV) dv,
+      RTRIM(M.CASIEmail) email,CONVERT(bit,M.CASIActivo) active,
       (SELECT COUNT(*) FROM SSP06OPPedidosPlanta P WHERE P.GECODEMP=M.GECODEMP AND P.CASICod=M.CASICod)
       +(SELECT COUNT(*) FROM SSP06MAProducto P WHERE P.GECODEMP=M.GECODEMP AND P.CASICod=M.CASICod) usageCount
       FROM SSP06MACasinosPlanta M WHERE M.GECODEMP=@empCod`,
-    search: `(name LIKE @q OR CONVERT(varchar(20),rut) LIKE @q OR email LIKE @q)`, orderBy: 'name,id'
+    search: `(name LIKE @q OR externalCode LIKE @q OR CONVERT(varchar(20),rut) LIKE @q OR email LIKE @q)`, orderBy: 'name,id'
   },
   destinos: {
     table: 'SSP06MADestinosPlanta', id: 'DESTICod', idType: sql.Decimal(10, 0),
-    source: `SELECT M.DESTICod id,RTRIM(M.DESTINom) name,
+    source: `SELECT M.DESTICod id,RTRIM(M.DESTICodigoExterno) externalCode,RTRIM(M.DESTINom) name,CONVERT(bit,M.DESTIActivo) active,
       (SELECT COUNT(*) FROM SSP06OPPedidosPlanta P WHERE P.GECODEMP=M.GECODEMP AND P.DESTICod=M.DESTICod) usageCount
-      FROM SSP06MADestinosPlanta M WHERE M.GECODEMP=@empCod`, search: 'name LIKE @q', orderBy: 'name,id'
+      FROM SSP06MADestinosPlanta M WHERE M.GECODEMP=@empCod`, search: '(name LIKE @q OR externalCode LIKE @q)', orderBy: 'name,id'
   },
   motivos: {
     table: 'SSP06MAMotivoPedidos', id: 'Mot6Cod', idType: sql.SmallInt,
-    source: `SELECT M.Mot6Cod id,RTRIM(M.Mot6Descrip) name,
+    source: `SELECT M.Mot6Cod id,RTRIM(M.Mot6CodigoExterno) externalCode,RTRIM(M.Mot6Descrip) name,CONVERT(bit,M.Mot6Activo) active,
       (SELECT COUNT(*) FROM SSP06OPPedidosPlanta P WHERE P.GECODEMP=M.GECODEMP AND P.Mot6Cod=M.Mot6Cod) usageCount
-      FROM SSP06MAMotivoPedidos M WHERE M.GECODEMP=@empCod`, search: 'name LIKE @q', orderBy: 'name,id'
+      FROM SSP06MAMotivoPedidos M WHERE M.GECODEMP=@empCod`, search: '(name LIKE @q OR externalCode LIKE @q)', orderBy: 'name,id'
   },
   'tipos-producto': {
     table: 'SSP06MATPProducto', id: 'TPPRCod', idType: sql.Decimal(10, 0),
-    source: `SELECT M.TPPRCod id,RTRIM(M.TPPRNombre) name,M.TPPROrden [order],COALESCE(M.TPPRAcceso,0) access,
+    source: `SELECT M.TPPRCod id,RTRIM(M.TPPRCodigoExterno) externalCode,RTRIM(M.TPPRNombre) name,M.TPPROrden [order],COALESCE(M.TPPRAcceso,0) access,CONVERT(bit,M.TPPRActivo) active,
       (SELECT COUNT(*) FROM SSP06MAProducto P WHERE P.GECODEMP=M.GECODEMP AND P.TPPRCod=M.TPPRCod) usageCount
-      FROM SSP06MATPProducto M WHERE M.GECODEMP=@empCod`, search: 'name LIKE @q', orderBy: '[order],name,id'
+      FROM SSP06MATPProducto M WHERE M.GECODEMP=@empCod`, search: '(name LIKE @q OR externalCode LIKE @q)', orderBy: '[order],name,id'
   },
   productos: {
     table: 'SSP06MAProducto', id: 'PRODCodigo', idType: sql.Decimal(10, 0),
-    source: `SELECT M.PRODCodigo id,RTRIM(M.ProdNombre) name,M.PRODPrecio price,M.CASICod casinoId,
+    source: `SELECT M.PRODCodigo id,RTRIM(M.PRODCodigoExterno) externalCode,RTRIM(M.ProdNombre) name,M.PRODPrecio price,M.CASICod casinoId,CONVERT(bit,M.PRODActivo) active,
       RTRIM(C.CASINom) casino,M.TPPRCod categoryId,RTRIM(T.TPPRNombre) category,COALESCE(T.TPPRAcceso,0) access,
       (SELECT COUNT(*) FROM SSP06OPPedidosPlantaDet D WHERE D.GECODEMP=M.GECODEMP AND D.PRODCodigo=M.PRODCodigo) usageCount
       FROM SSP06MAProducto M
       INNER JOIN SSP06MACasinosPlanta C ON C.GECODEMP=M.GECODEMP AND C.CASICod=M.CASICod
       INNER JOIN SSP06MATPProducto T ON T.GECODEMP=M.GECODEMP AND T.TPPRCod=M.TPPRCod
-      WHERE M.GECODEMP=@empCod`, search: `(name LIKE @q OR casino LIKE @q OR category LIKE @q)`, orderBy: 'casino,category,name,id'
+      WHERE M.GECODEMP=@empCod`, search: `(name LIKE @q OR externalCode LIKE @q OR casino LIKE @q OR category LIKE @q)`, orderBy: 'casino,category,name,id'
   }
 };
 
@@ -103,29 +103,30 @@ const validateReferences = async (request, catalog, payload, empCod) => {
 };
 
 const writeValues = (request, catalog, payload) => {
+  request.input('externalCode', sql.VarChar(30), payload.externalCode).input('active', sql.Bit, payload.active);
   if (catalog === 'casinos') return request.input('name', sql.Char(40), payload.name).input('rut', sql.Int, payload.rut)
     .input('dv', sql.Char(1), payload.dv).input('email', sql.Char(50), payload.email);
   if (catalog === 'destinos' || catalog === 'motivos') return request.input('name', sql.Char(40), payload.name);
   if (catalog === 'tipos-producto') return request.input('name', sql.Char(40), payload.name)
     .input('order', sql.SmallInt, payload.order).input('access', sql.SmallInt, payload.access);
-  return request.input('name', sql.Char(40), payload.name).input('price', sql.Decimal(10, 0), payload.price)
+  return request.input('name', sql.VarChar(60), payload.name).input('price', sql.Decimal(10, 0), payload.price)
     .input('casinoId', sql.Decimal(10, 0), payload.casinoId).input('categoryId', sql.Decimal(10, 0), payload.categoryId);
 };
 
 const insertSql = (catalog, config) => ({
-  casinos: `INSERT INTO ${config.table}(GECODEMP,${config.id},CASINom,CASIDV,CASIRut,CASIEmail) VALUES(@empCod,@id,@name,@dv,@rut,@email)`,
-  destinos: `INSERT INTO ${config.table}(GECODEMP,${config.id},DESTINom) VALUES(@empCod,@id,@name)`,
-  motivos: `INSERT INTO ${config.table}(GECODEMP,${config.id},Mot6Descrip) VALUES(@empCod,@id,@name)`,
-  'tipos-producto': `INSERT INTO ${config.table}(GECODEMP,${config.id},TPPRNombre,TPPROrden,TPPRAcceso) VALUES(@empCod,@id,@name,@order,@access)`,
-  productos: `INSERT INTO ${config.table}(GECODEMP,${config.id},TPPRCod,ProdNombre,PRODPrecio,CASICod) VALUES(@empCod,@id,@categoryId,@name,@price,@casinoId)`
+  casinos: `INSERT INTO ${config.table}(GECODEMP,${config.id},CASICodigoExterno,CASINom,CASIDV,CASIRut,CASIEmail,CASIActivo) VALUES(@empCod,@id,@externalCode,@name,@dv,@rut,@email,@active)`,
+  destinos: `INSERT INTO ${config.table}(GECODEMP,${config.id},DESTICodigoExterno,DESTINom,DESTIActivo) VALUES(@empCod,@id,@externalCode,@name,@active)`,
+  motivos: `INSERT INTO ${config.table}(GECODEMP,${config.id},Mot6CodigoExterno,Mot6Descrip,Mot6Activo) VALUES(@empCod,@id,@externalCode,@name,@active)`,
+  'tipos-producto': `INSERT INTO ${config.table}(GECODEMP,${config.id},TPPRCodigoExterno,TPPRNombre,TPPROrden,TPPRAcceso,TPPRActivo) VALUES(@empCod,@id,@externalCode,@name,@order,@access,@active)`,
+  productos: `INSERT INTO ${config.table}(GECODEMP,${config.id},PRODCodigoExterno,TPPRCod,ProdNombre,PRODPrecio,CASICod,PRODActivo) VALUES(@empCod,@id,@externalCode,@categoryId,@name,@price,@casinoId,@active)`
 }[catalog]);
 
 const updateSql = (catalog, config) => ({
-  casinos: `UPDATE ${config.table} SET CASINom=@name,CASIDV=@dv,CASIRut=@rut,CASIEmail=@email WHERE GECODEMP=@empCod AND ${config.id}=@id`,
-  destinos: `UPDATE ${config.table} SET DESTINom=@name WHERE GECODEMP=@empCod AND ${config.id}=@id`,
-  motivos: `UPDATE ${config.table} SET Mot6Descrip=@name WHERE GECODEMP=@empCod AND ${config.id}=@id`,
-  'tipos-producto': `UPDATE ${config.table} SET TPPRNombre=@name,TPPROrden=@order,TPPRAcceso=@access WHERE GECODEMP=@empCod AND ${config.id}=@id`,
-  productos: `UPDATE ${config.table} SET TPPRCod=@categoryId,ProdNombre=@name,PRODPrecio=@price,CASICod=@casinoId WHERE GECODEMP=@empCod AND ${config.id}=@id`
+  casinos: `UPDATE ${config.table} SET CASICodigoExterno=@externalCode,CASINom=@name,CASIDV=@dv,CASIRut=@rut,CASIEmail=@email,CASIActivo=@active WHERE GECODEMP=@empCod AND ${config.id}=@id`,
+  destinos: `UPDATE ${config.table} SET DESTICodigoExterno=@externalCode,DESTINom=@name,DESTIActivo=@active WHERE GECODEMP=@empCod AND ${config.id}=@id`,
+  motivos: `UPDATE ${config.table} SET Mot6CodigoExterno=@externalCode,Mot6Descrip=@name,Mot6Activo=@active WHERE GECODEMP=@empCod AND ${config.id}=@id`,
+  'tipos-producto': `UPDATE ${config.table} SET TPPRCodigoExterno=@externalCode,TPPRNombre=@name,TPPROrden=@order,TPPRAcceso=@access,TPPRActivo=@active WHERE GECODEMP=@empCod AND ${config.id}=@id`,
+  productos: `UPDATE ${config.table} SET PRODCodigoExterno=@externalCode,TPPRCod=@categoryId,ProdNombre=@name,PRODPrecio=@price,CASICod=@casinoId,PRODActivo=@active WHERE GECODEMP=@empCod AND ${config.id}=@id`
 }[catalog]);
 
 const create = async (catalogValue, body, context) => {
@@ -170,8 +171,8 @@ const remove = async (catalogValue, idValue, context) => {
 const options = async (context) => {
   const empCod = sessionCompany(context);
   const result = await (await getPool()).request().input('empCod', sql.Int, empCod).query(`
-    SELECT CASICod id,RTRIM(CASINom) name FROM SSP06MACasinosPlanta WHERE GECODEMP=@empCod ORDER BY CASINom;
-    SELECT TPPRCod id,RTRIM(TPPRNombre) name,COALESCE(TPPRAcceso,0) access FROM SSP06MATPProducto WHERE GECODEMP=@empCod ORDER BY TPPROrden,TPPRNombre;`);
+    SELECT CASICod id,RTRIM(CASINom) name FROM SSP06MACasinosPlanta WHERE GECODEMP=@empCod AND CASIActivo=1 ORDER BY CASINom;
+    SELECT TPPRCod id,RTRIM(TPPRNombre) name,COALESCE(TPPRAcceso,0) access FROM SSP06MATPProducto WHERE GECODEMP=@empCod AND TPPRActivo=1 ORDER BY TPPROrden,TPPRNombre;`);
   return { casinos: result.recordsets[0] || [], categories: result.recordsets[1] || [] };
 };
 

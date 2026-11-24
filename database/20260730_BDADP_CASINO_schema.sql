@@ -65,6 +65,7 @@ CREATE TABLE dbo.FPArea (
 CREATE TABLE dbo.FPDivision (
   GECODEMP decimal(10,0) NOT NULL,
   DivId char(10) NOT NULL,
+  DivCodigoExterno varchar(30) NULL,
   DivDescripcion char(80) NOT NULL,
   CONSTRAINT PK_FPDivision PRIMARY KEY (GECODEMP, DivId),
   CONSTRAINT FK_FPDivision_G_Emp FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp (GECODEMP)
@@ -74,6 +75,7 @@ CREATE TABLE dbo.FPDivisionSub (
   GECODEMP decimal(10,0) NOT NULL,
   DivId char(10) NOT NULL,
   SdiId char(10) NOT NULL,
+  SdiCodigoExterno varchar(30) NULL,
   SdiDescripcion char(80) NOT NULL,
   CONSTRAINT PK_FPDivisionSub PRIMARY KEY (GECODEMP, DivId, SdiId),
   CONSTRAINT FK_FPDivisionSub_FPDivision FOREIGN KEY (GECODEMP, DivId)
@@ -91,6 +93,7 @@ CREATE TABLE dbo.FPOrganiza (
 CREATE TABLE dbo.FPCenCos (
   GECODEMP decimal(10,0) NOT NULL,
   CecId char(10) NOT NULL,
+  CecCodigoExterno varchar(30) NULL,
   CecDescripcion char(80) NOT NULL,
   CONSTRAINT PK_FPCenCos PRIMARY KEY (GECODEMP, CecId),
   CONSTRAINT FK_FPCenCos_G_Emp FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp (GECODEMP)
@@ -198,10 +201,12 @@ CREATE INDEX IX_FPPersonas_Turno ON dbo.FPPersonas (GECODEMP, PerTURCod);
 CREATE TABLE dbo.SSP06MACasinosPlanta (
   GECODEMP decimal(10,0) NOT NULL,
   CASICod decimal(10,0) NOT NULL,
+  CASICodigoExterno varchar(30) NULL,
   CASINom char(40) NOT NULL,
   CASIDV char(1) NOT NULL,
   CASIRut int NOT NULL,
   CASIEmail char(50) NOT NULL,
+  CASIActivo bit NOT NULL CONSTRAINT DF_SSP06MACasinosPlanta_Activo DEFAULT (1),
   CONSTRAINT PK_SSP06MACasinosPlanta PRIMARY KEY (GECODEMP, CASICod),
   CONSTRAINT FK_SSP06MACasinosPlanta_G_Emp FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp (GECODEMP)
 );
@@ -209,7 +214,9 @@ CREATE TABLE dbo.SSP06MACasinosPlanta (
 CREATE TABLE dbo.SSP06MADestinosPlanta (
   GECODEMP decimal(10,0) NOT NULL,
   DESTICod decimal(10,0) NOT NULL,
+  DESTICodigoExterno varchar(30) NULL,
   DESTINom char(40) NOT NULL,
+  DESTIActivo bit NOT NULL CONSTRAINT DF_SSP06MADestinosPlanta_Activo DEFAULT (1),
   CONSTRAINT PK_SSP06MADestinosPlanta PRIMARY KEY (GECODEMP, DESTICod),
   CONSTRAINT FK_SSP06MADestinosPlanta_G_Emp FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp (GECODEMP)
 );
@@ -217,7 +224,9 @@ CREATE TABLE dbo.SSP06MADestinosPlanta (
 CREATE TABLE dbo.SSP06MAMotivoPedidos (
   GECODEMP decimal(10,0) NOT NULL,
   Mot6Cod smallint NOT NULL,
+  Mot6CodigoExterno varchar(30) NULL,
   Mot6Descrip char(40) NOT NULL,
+  Mot6Activo bit NOT NULL CONSTRAINT DF_SSP06MAMotivoPedidos_Activo DEFAULT (1),
   CONSTRAINT PK_SSP06MAMotivoPedidos PRIMARY KEY (GECODEMP, Mot6Cod),
   CONSTRAINT FK_SSP06MAMotivoPedidos_G_Emp FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp (GECODEMP)
 );
@@ -225,9 +234,11 @@ CREATE TABLE dbo.SSP06MAMotivoPedidos (
 CREATE TABLE dbo.SSP06MATPProducto (
   GECODEMP decimal(10,0) NOT NULL,
   TPPRCod decimal(10,0) NOT NULL,
+  TPPRCodigoExterno varchar(30) NULL,
   TPPRNombre char(40) NOT NULL,
   TPPROrden smallint NOT NULL,
   TPPRAcceso smallint NULL,
+  TPPRActivo bit NOT NULL CONSTRAINT DF_SSP06MATPProducto_Activo DEFAULT (1),
   CONSTRAINT PK_SSP06MATPProducto PRIMARY KEY (GECODEMP, TPPRCod),
   CONSTRAINT FK_SSP06MATPProducto_G_Emp FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp (GECODEMP),
   CONSTRAINT CK_SSP06MATPProducto_Acceso CHECK (TPPRAcceso IS NULL OR TPPRAcceso IN (0,1))
@@ -236,10 +247,12 @@ CREATE TABLE dbo.SSP06MATPProducto (
 CREATE TABLE dbo.SSP06MAProducto (
   GECODEMP decimal(10,0) NOT NULL,
   PRODCodigo decimal(10,0) NOT NULL,
+  PRODCodigoExterno varchar(30) NULL,
   TPPRCod decimal(10,0) NOT NULL,
-  ProdNombre char(40) NOT NULL,
+  ProdNombre varchar(60) NOT NULL,
   PRODPrecio decimal(10,0) NOT NULL,
   CASICod decimal(10,0) NOT NULL,
+  PRODActivo bit NOT NULL CONSTRAINT DF_SSP06MAProducto_Activo DEFAULT (1),
   CONSTRAINT PK_SSP06MAProducto PRIMARY KEY (GECODEMP, PRODCodigo),
   CONSTRAINT FK_SSP06MAProducto_Tipo FOREIGN KEY (GECODEMP, TPPRCod)
     REFERENCES dbo.SSP06MATPProducto (GECODEMP, TPPRCod),
@@ -250,6 +263,61 @@ CREATE TABLE dbo.SSP06MAProducto (
 
 CREATE INDEX IX_SSP06MAProducto_Tipo ON dbo.SSP06MAProducto (GECODEMP, TPPRCod);
 CREATE INDEX IX_SSP06MAProducto_Casino ON dbo.SSP06MAProducto (GECODEMP, CASICod);
+
+CREATE UNIQUE INDEX UX_FPDivision_Externo ON dbo.FPDivision (GECODEMP, DivCodigoExterno) WHERE DivCodigoExterno IS NOT NULL;
+CREATE UNIQUE INDEX UX_FPDivisionSub_Externo ON dbo.FPDivisionSub (GECODEMP, SdiCodigoExterno) WHERE SdiCodigoExterno IS NOT NULL;
+CREATE UNIQUE INDEX UX_FPCenCos_Externo ON dbo.FPCenCos (GECODEMP, CecCodigoExterno) WHERE CecCodigoExterno IS NOT NULL;
+CREATE UNIQUE INDEX UX_SSP06MACasinosPlanta_Externo ON dbo.SSP06MACasinosPlanta (GECODEMP, CASICodigoExterno) WHERE CASICodigoExterno IS NOT NULL;
+CREATE UNIQUE INDEX UX_SSP06MADestinosPlanta_Externo ON dbo.SSP06MADestinosPlanta (GECODEMP, DESTICodigoExterno) WHERE DESTICodigoExterno IS NOT NULL;
+CREATE UNIQUE INDEX UX_SSP06MAMotivoPedidos_Externo ON dbo.SSP06MAMotivoPedidos (GECODEMP, Mot6CodigoExterno) WHERE Mot6CodigoExterno IS NOT NULL;
+CREATE UNIQUE INDEX UX_SSP06MATPProducto_Externo ON dbo.SSP06MATPProducto (GECODEMP, TPPRCodigoExterno) WHERE TPPRCodigoExterno IS NOT NULL;
+CREATE UNIQUE INDEX UX_SSP06MAProducto_Externo ON dbo.SSP06MAProducto (GECODEMP, PRODCodigoExterno) WHERE PRODCodigoExterno IS NOT NULL;
+
+CREATE TABLE dbo.SSP06MASolicitante (
+  SOLId bigint IDENTITY(1,1) NOT NULL,
+  GECODEMP decimal(10,0) NOT NULL,
+  SOLCodigoExterno varchar(30) NOT NULL,
+  SOLRut int NOT NULL,
+  SOLLogin char(10) NOT NULL,
+  SOLNombres varchar(40) NOT NULL,
+  SOLApellidoPaterno varchar(40) NOT NULL,
+  SOLApellidoMaterno varchar(40) NOT NULL CONSTRAINT DF_SSP06MASolicitante_Materno DEFAULT (''),
+  SOLEmail varchar(50) NOT NULL,
+  DivId char(10) NOT NULL,
+  SdiId char(10) NOT NULL,
+  CecId char(10) NOT NULL,
+  SOLActivo bit NOT NULL CONSTRAINT DF_SSP06MASolicitante_Activo DEFAULT (1),
+  SOLFechaCrea datetime2(0) NOT NULL CONSTRAINT DF_SSP06MASolicitante_FechaCrea DEFAULT (SYSUTCDATETIME()),
+  SOLFechaModifica datetime2(0) NOT NULL CONSTRAINT DF_SSP06MASolicitante_FechaModifica DEFAULT (SYSUTCDATETIME()),
+  SOLUsuarioModifica char(10) NOT NULL,
+  CONSTRAINT PK_SSP06MASolicitante PRIMARY KEY (GECODEMP,SOLId),
+  CONSTRAINT UQ_SSP06MASolicitante_Codigo UNIQUE (GECODEMP,SOLCodigoExterno),
+  CONSTRAINT UQ_SSP06MASolicitante_Rut UNIQUE (GECODEMP,SOLRut),
+  CONSTRAINT FK_SSP06MASolicitante_Usuario FOREIGN KEY (GECODEMP,SOLLogin) REFERENCES dbo.SEGUSUEMP(GECODEMP,UsuLogin),
+  CONSTRAINT FK_SSP06MASolicitante_Subdivision FOREIGN KEY (GECODEMP,DivId,SdiId) REFERENCES dbo.FPDivisionSub(GECODEMP,DivId,SdiId),
+  CONSTRAINT FK_SSP06MASolicitante_CentroCosto FOREIGN KEY (GECODEMP,CecId) REFERENCES dbo.FPCenCos(GECODEMP,CecId)
+);
+
+CREATE INDEX IX_SSP06MASolicitante_Email ON dbo.SSP06MASolicitante(GECODEMP,SOLEmail);
+
+EXEC(N'CREATE OR ALTER VIEW dbo.SSP06VWSolicitanteHistorico AS
+  SELECT S.GECODEMP,S.SOLRut PerRut,U.UsuDV PerDV,
+    CONVERT(varchar(130),LTRIM(RTRIM(CONCAT(S.SOLNombres,'' '',S.SOLApellidoPaterno,'' '',S.SOLApellidoMaterno)))) PernombreCom,
+    CONVERT(varchar(50),S.SOLEmail) PerEmail,S.DivId,S.SdiId,S.CecId,CASE WHEN S.SOLActivo=1 THEN 1 ELSE 2 END PerEstadoLab
+  FROM dbo.SSP06MASolicitante S INNER JOIN dbo.USUARIOS U ON RTRIM(U.UsuLogin)=RTRIM(S.SOLLogin)
+  UNION ALL
+  SELECT P.GECODEMP,P.PerRut,P.PerDV,CONVERT(varchar(130),RTRIM(P.PernombreCom)),CONVERT(varchar(50),RTRIM(P.PerEmail)),P.DivId,P.SdiId,P.CecId,P.PerEstadoLab
+  FROM dbo.FPPersonas P WHERE NOT EXISTS (SELECT 1 FROM dbo.SSP06MASolicitante S WHERE S.GECODEMP=P.GECODEMP AND S.SOLRut=P.PerRut);');
+
+CREATE TABLE dbo.SSP06OPCargaCasino (
+  CARId bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
+  GECODEMP decimal(10,0) NOT NULL,
+  CARArchivo varchar(255) NOT NULL,
+  CARResumen nvarchar(max) NOT NULL,
+  CARUsuario char(10) NOT NULL,
+  CARFecha datetime2(0) NOT NULL CONSTRAINT DF_SSP06OPCargaCasino_Fecha DEFAULT (SYSUTCDATETIME()),
+  CONSTRAINT FK_SSP06OPCargaCasino_Empresa FOREIGN KEY (GECODEMP) REFERENCES dbo.G_Emp(GECODEMP)
+);
 
 /* Cabecera y segundo nivel de la transaccion SSP06OPPedidosPlanta. */
 CREATE TABLE dbo.SSP06OPPedidosPlanta (
@@ -278,8 +346,6 @@ CREATE TABLE dbo.SSP06OPPedidosPlanta (
     REFERENCES dbo.SSP06MACasinosPlanta (GECODEMP, CASICod),
   CONSTRAINT FK_SSP06OPPedidosPlanta_Motivo FOREIGN KEY (GECODEMP, Mot6Cod)
     REFERENCES dbo.SSP06MAMotivoPedidos (GECODEMP, Mot6Cod),
-  CONSTRAINT FK_SSP06OPPedidosPlanta_Persona FOREIGN KEY (GECODEMP, PedRutSolicita)
-    REFERENCES dbo.FPPersonas (GECODEMP, PerRut),
   CONSTRAINT CK_SSP06OPPedidosPlanta_Estado CHECK (PedEstadoIngreso IN (0, 1, 2, 3, 5)),
   CONSTRAINT CK_SSP06OPPedidosPlanta_Pago CHECK (PEDControlPago IN (0, 1, 2))
 );

@@ -11,13 +11,16 @@ permite iniciar una solicitud y la pantalla de catálogo administra un borrador 
 - Programa operativo: sistema 55, módulo 1, programa 1.
 - Elección de otro solicitante: programa 55/1/90 (`Adm de Pedidos`).
 - Empresa y login se obtienen únicamente de la sesión autenticada.
-- El solicitante normal se obtiene de `USUARIOS.UsuRut`; un administrador 55/1/90
-  puede seleccionar una persona de `FPPersonas` de la misma empresa.
+- El solicitante normal se obtiene de `USUARIOS.UsuRut` y debe estar activo en
+  `SSP06MASolicitante`; un administrador 55/1/90 puede seleccionar otro solicitante
+  activo de la misma empresa.
+- Si el administrador 55/1/90 no es solicitante, el contexto carga los catálogos y
+  exige elegir uno antes de crear. La ausencia de ficha propia no bloquea el selector.
 - El correlativo se mantiene en `MACorrelativos`, clave `PEDCASINOS`.
 - Estados: 0 borrador, 1 enviado al casino, 3 entregado y 5 anulado.
 - Los precios y la pertenencia de cada producto al casino se vuelven a validar en el
   backend antes de escribir el encabezado y su nivel detalle.
-- `DivId`, `SdiId` y `CecId` se obtienen de la ficha de la persona; nunca de React.
+- `DivId`, `SdiId` y `CecId` se obtienen de `SSP06MASolicitante`; nunca de React.
 
 ## Decisiones de migración
 
@@ -37,10 +40,10 @@ escribir. Tras una respuesta exitosa de creación y envío, navega a
 `/casino/pedidos/historial?pedido=<numero>` y el historial abre el detalle. Esta mejora
 no altera la transacción, los estados ni la validación de precios del backend.
 
-Una ficha incompleta no se corrige desde la solicitud. El backend informa exactamente
+Una ficha de solicitante incompleta no se corrige desde la solicitud. El backend informa exactamente
 si falta división, subdivisión o centro de costo; React bloquea ambos botones de
-creación, permite revisar la ficha de Personas y, con 55/1/90, elegir otro solicitante.
-Las personas incompletas aparecen deshabilitadas en el selector para evitar un error al
+creación, permite revisar el maestro de Solicitantes y, con 55/1/90, elegir otro solicitante.
+Los solicitantes incompletos aparecen deshabilitados en el selector para evitar un error al
 final del flujo.
 
 ## API

@@ -7,7 +7,7 @@ dos funciones operativas, cuatro consultas mensuales y la descarga general.
 
 ## Maestros
 
-Los cinco maestros cuentan con CRUD backend y pantallas React independientes. Comparten
+Los cinco maestros y el nuevo maestro de solicitantes cuentan con CRUD backend y pantallas React independientes. Comparten
 el listado operacional azul, indicadores, filtros automáticos, tabla paginada y
 exportaciones Excel/PDF del conjunto filtrado. La empresa proviene exclusivamente de
 la sesión y cada maestro conserva su programa histórico 55/10.
@@ -19,6 +19,11 @@ la sesión y cada maestro conserva su programa histórico 55/10.
 | Motivos de pedidos | `SSP06MAMotivoPedidos` · `maeSSP06MAMotivoPedidos` | Implementado con 55/10/3. La baja se bloquea cuando existen pedidos asociados. |
 | Tipos de productos | `SSP06MATPProducto` · `maeSSP06MATPProducto` | Implementado con 55/10/10: nombre, orden y `TPPRAcceso`. La baja se bloquea si contiene productos. |
 | Productos de casino | `SSP06MAProducto` · `maeSSP06MAProducto` | Implementado con 55/10/11: nombre, tipo, precio y casino. La baja se bloquea si aparece en pedidos. |
+| Solicitantes | `SSP06MASolicitante` | Implementado con 55/10/12. Mantiene un ID interno autoincremental y sincroniza RUT, usuario y ubicación con Personas y Seguridad. |
+
+El centro de cargas 55/10/13 valida e importa XLSX. Los códigos de negocio se guardan
+como códigos externos y las relaciones usan IDs internos generados. La carga completa
+es transaccional y registra su resumen en `SSP06OPCargaCasino`.
 
 `TPPRAcceso=0` significa liberado. `TPPRAcceso=1` significa restringido y requiere la
 capacidad adicional 55/1/91 al crear pedidos. La consulta del contexto filtra esos
@@ -48,9 +53,10 @@ enviar el pedido, pero recibe una denegación al consultar ese historial.
 
 ## Consultas mensuales
 
-Las cuatro consultas están implementadas como matrices anuales independientes con
-columnas enero–diciembre, total, indicadores, filtros automáticos y exportación del
-conjunto filtrado.
+Las cuatro consultas están implementadas como matrices independientes con rango de
+fechas, columnas mes/año dinámicas, total, indicadores, filtros automáticos y
+exportación del conjunto filtrado. Al abrir muestran los últimos 30 días; ambos límites
+pueden limpiarse para consultar intervalos abiertos.
 
 | Consulta | Programa histórico | Salida solicitada | Referencia GeneXus |
 | --- | --- | --- | --- |

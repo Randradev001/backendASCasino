@@ -39,21 +39,23 @@ const loadAuthenticatedUser = async (executor, { empCod, login }) => {
   return { rut: Number(row.UsuRut), dv: clean(row.UsuDV), name: clean(row.Usunom) };
 };
 
-const loadPerson = async (executor, empCod, rut) => {
+const loadRequester = async (executor, empCod, rut) => {
   const result = await requestFor(executor)
     .input('empCod', sql.Int, empCod)
     .input('rut', sql.Int, rut)
     .query(`
-      SELECT P.PerRut, RTRIM(P.PerDV) PerDV, RTRIM(P.PernombreCom) PernombreCom,
-             RTRIM(P.DivId) DivId, RTRIM(P.SdiId) SdiId, RTRIM(P.CecId) CecId,
-             P.PerEstadoLab, RTRIM(ISNULL(D.DivDescripcion,'')) DivDescripcion,
-             RTRIM(ISNULL(S.SdiDescripcion,'')) SdiDescripcion,
+      SELECT S.SOLRut PerRut, RTRIM(U.UsuDV) PerDV,
+             RTRIM(CONCAT(S.SOLNombres,' ',S.SOLApellidoPaterno,' ',S.SOLApellidoMaterno)) PernombreCom,
+             RTRIM(S.DivId) DivId, RTRIM(S.SdiId) SdiId, RTRIM(S.CecId) CecId,
+             S.SOLActivo PerEstadoLab, RTRIM(ISNULL(D.DivDescripcion,'')) DivDescripcion,
+             RTRIM(ISNULL(SD.SdiDescripcion,'')) SdiDescripcion,
              RTRIM(ISNULL(C.CecDescripcion,'')) CecDescripcion
-      FROM FPPersonas P
-      LEFT JOIN FPDivision D ON D.GECODEMP=P.GECODEMP AND D.DivId=P.DivId
-      LEFT JOIN FPDivisionSub S ON S.GECODEMP=P.GECODEMP AND S.DivId=P.DivId AND S.SdiId=P.SdiId
-      LEFT JOIN FPCenCos C ON C.GECODEMP=P.GECODEMP AND C.CecId=P.CecId
-      WHERE P.GECODEMP=@empCod AND P.PerRut=@rut;
+      FROM SSP06MASolicitante S
+      INNER JOIN USUARIOS U ON RTRIM(U.UsuLogin)=RTRIM(S.SOLLogin)
+      LEFT JOIN FPDivision D ON D.GECODEMP=S.GECODEMP AND D.DivId=S.DivId
+      LEFT JOIN FPDivisionSub SD ON SD.GECODEMP=S.GECODEMP AND SD.DivId=S.DivId AND SD.SdiId=S.SdiId
+      LEFT JOIN FPCenCos C ON C.GECODEMP=S.GECODEMP AND C.CecId=S.CecId
+      WHERE S.GECODEMP=@empCod AND S.SOLRut=@rut AND S.SOLActivo=1;
     `);
   const row = result.recordset[0];
   if (!row) throw new SecurityError(404, 'REQUESTER_NOT_FOUND', 'El solicitante no existe en la empresa autenticada.');
@@ -84,27 +86,30 @@ const getContext = async (context, canManageOthers = false, canAccessRestrictedP
   const pool = await getPool();
   const authenticated = await loadAuthenticatedUser(pool, session);
   const [requester, catalogs] = await Promise.all([
-    loadPerson(pool, session.empCod, authenticated.rut),
+    loadRequester(pool, session.empCod, authenticated.rut).catch((error) => {
+      if (canManageOthers && error instanceof SecurityError && error.code === 'REQUESTER_NOT_FOUND') return null;
+      throw error;
+    }),
     pool.request().input('empCod', sql.Int, session.empCod)
       .input('canAccessRestricted', sql.Bit, canAccessRestrictedProducts ? 1 : 0).query(`
       SELECT CASICod, RTRIM(CASINom) CASINom FROM SSP06MACasinosPlanta
-      WHERE GECODEMP=@empCod ORDER BY CASINom;
+      WHERE GECODEMP=@empCod AND CASIActivo=1 ORDER BY CASINom;
 
       SELECT DESTICod, RTRIM(DESTINom) DESTINom FROM SSP06MADestinosPlanta
-      WHERE GECODEMP=@empCod ORDER BY DESTINom;
+      WHERE GECODEMP=@empCod AND DESTIActivo=1 ORDER BY DESTINom;
 
       SELECT Mot6Cod, RTRIM(Mot6Descrip) Mot6Descrip FROM SSP06MAMotivoPedidos
-      WHERE GECODEMP=@empCod ORDER BY Mot6Descrip;
+      WHERE GECODEMP=@empCod AND Mot6Activo=1 ORDER BY Mot6Descrip;
 
       SELECT TPPRCod, RTRIM(TPPRNombre) TPPRNombre, TPPROrden,COALESCE(TPPRAcceso,0) TPPRAcceso
       FROM SSP06MATPProducto
-      WHERE GECODEMP=@empCod AND (COALESCE(TPPRAcceso,0)=0 OR @canAccessRestricted=1)
+      WHERE GECODEMP=@empCod AND TPPRActivo=1 AND (COALESCE(TPPRAcceso,0)=0 OR @canAccessRestricted=1)
       ORDER BY TPPROrden, TPPRNombre;
 
       SELECT P.PRODCodigo, P.TPPRCod, RTRIM(P.ProdNombre) ProdNombre, P.PRODPrecio, P.CASICod
       FROM SSP06MAProducto P
       INNER JOIN SSP06MATPProducto T ON T.GECODEMP=P.GECODEMP AND T.TPPRCod=P.TPPRCod
-      WHERE P.GECODEMP=@empCod AND (COALESCE(T.TPPRAcceso,0)=0 OR @canAccessRestricted=1)
+      WHERE P.GECODEMP=@empCod AND P.PRODActivo=1 AND T.TPPRActivo=1 AND (COALESCE(T.TPPRAcceso,0)=0 OR @canAccessRestricted=1)
       ORDER BY T.TPPROrden, P.ProdNombre;
     `)
   ]);
@@ -114,6 +119,7 @@ const getContext = async (context, canManageOthers = false, canAccessRestrictedP
     login: session.login,
     canManageOthers: Boolean(canManageOthers),
     canAccessRestrictedProducts: Boolean(canAccessRestrictedProducts),
+    requiresRequesterSelection: !requester,
     requester,
     catalogs: {
       casinos: (catalogs.recordsets[0] || []).map((row) => ({ id: number(row.CASICod), name: clean(row.CASINom) })),
@@ -211,7 +217,7 @@ const createDraft = async (body, context, canManageOthers = false, canAccessRest
       requestedRut: input.requesterRut,
       canManageOthers
     });
-    const requester = await loadPerson(transaction, session.empCod, requesterRut);
+    const requester = await loadRequester(transaction, session.empCod, requesterRut);
     if (!requester.locationComplete) {
       const locationError = buildRequesterLocationError(requester);
       throw new SecurityError(409, 'REQUESTER_LOCATION_REQUIRED', locationError.message, {

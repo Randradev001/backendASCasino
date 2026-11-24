@@ -29,7 +29,9 @@ const minimumRows = {
   SSP06OPEvalPedidoCasino: 14,
   SSP06OPPedidosPlantaPagoHistorial: 0,
   SSP06OPCorreoOutbox: 0,
-  SSP06OPCorreoIntento: 0
+  SSP06OPCorreoIntento: 0,
+  SSP06MASolicitante: 0,
+  SSP06OPCargaCasino: 0
 };
 
 const minimumPersonRows = {
@@ -61,11 +63,17 @@ const run = async () => {
              (SELECT COUNT(*) FROM dbo.FPPersonas) AS people,
              (SELECT COUNT(*) FROM dbo.FPPersonas WHERE PerFoto IS NOT NULL AND DATALENGTH(PerFoto)>0) AS peopleWithPhoto,
              (SELECT COUNT(*) FROM dbo.USUARIOS) AS securityUsers,
+             (SELECT COUNT(*) FROM dbo.SSP06MASolicitante) AS requesters,
              (SELECT COUNT(*) FROM dbo.SISTEMAS WHERE SistCod=55) AS casinoSystems,
              (SELECT COUNT(*) FROM dbo.SISTEMAS WHERE SistCod=10) AS peopleSystems,
              (SELECT COUNT(*) FROM dbo.PROGRAM WHERE SistCod=10 AND Modcod=1 AND ProgCod IN (1,2)) AS peoplePrograms,
              (SELECT COUNT(*) FROM sys.tables WHERE name IN ('FPhuellas','FPMovPerson','LogPersonas','ListAnexo')) AS excludedPeopleTables,
-             (SELECT COUNT(*) FROM dbo.PROGRAM WHERE SistCod=55 AND Modcod=1 AND ProgCod=91) AS permission91;
+             (SELECT COUNT(*) FROM dbo.PROGRAM WHERE SistCod=55 AND Modcod=1 AND ProgCod=91) AS permission91,
+             (SELECT COUNT(*) FROM dbo.ASIGPROG WHERE GECODEMP=0 AND RTRIM(UsuLogin)='CAS_USER' AND SistCod=55 AND Modcod=1 AND ProgCod=91) AS casUserAllProducts,
+             (SELECT COUNT(*) FROM dbo.PROGRAM WHERE SistCod=55 AND Modcod=10 AND ProgCod IN (12,13)) AS loadPrograms,
+             (SELECT COUNT(*) FROM sys.columns WHERE object_id=OBJECT_ID('dbo.SSP06MAProducto') AND name IN ('PRODCodigoExterno','PRODActivo')) AS productLoadColumns,
+             (SELECT COUNT(*) FROM sys.views WHERE name='SSP06VWSolicitanteHistorico') AS requesterHistoryView,
+             (SELECT COUNT(*) FROM sys.foreign_keys WHERE name IN ('FK_SSP06MASolicitante_Persona','FK_SSP06OPPedidosPlanta_Persona')) AS legacyRequesterForeignKeys;
     `);
 
     const summary = metadata.recordset[0];
@@ -76,6 +84,11 @@ const run = async () => {
     if (Number(summary.peoplePrograms) !== 2) fail('Faltan los programas 10/1/1 y 10/1/2 de la ficha de Personas.');
     if (Number(summary.excludedPeopleTables) !== 0) fail('La base contiene biometria, movimientos o anexos fuera del alcance de la ficha.');
     if (Number(summary.permission91) !== 1) fail('Falta el permiso 55/1/91 para acceso a todos los productos.');
+    if (Number(summary.casUserAllProducts) !== 1) fail('El rol CAS_USER no tiene asignado 55/1/91.');
+    if (Number(summary.loadPrograms) !== 2) fail('Faltan los programas 55/10/12 y 55/10/13 de solicitantes y centro de cargas.');
+    if (Number(summary.productLoadColumns) !== 2) fail('Faltan las columnas de código externo y estado en Productos.');
+    if (Number(summary.requesterHistoryView) !== 1) fail('Falta la vista histórica de solicitantes.');
+    if (Number(summary.legacyRequesterForeignKeys) !== 0) fail('Casino todavía depende de claves foráneas hacia FPPersonas.');
 
     const counts = await pool.request().query(`
       SELECT t.name AS tableName, SUM(CASE WHEN p.index_id IN (0,1) THEN p.rows ELSE 0 END) AS [rowCount]
@@ -150,6 +163,7 @@ const run = async () => {
       { verificacion: 'Personas disponibles', resultado: Number(summary.people) },
       { verificacion: 'Fichas con foto', resultado: Number(summary.peopleWithPhoto) },
       { verificacion: 'Usuarios Seguridad', resultado: Number(summary.securityUsers) },
+      { verificacion: 'Solicitantes operativos', resultado: Number(summary.requesters) },
       { verificacion: 'Tablas Casino', resultado: Object.keys(minimumRows).length },
       { verificacion: 'Tablas Personas', resultado: Object.keys(minimumPersonRows).length },
       { verificacion: 'Maestros CONEX', resultado: 0 }

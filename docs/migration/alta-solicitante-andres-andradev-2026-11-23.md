@@ -1,7 +1,7 @@
 # Alta de solicitante Casino para Andres
 
 El script `database/20261123_alta_solicitante_andres_andradev.sql` prepara la cuenta
-existente `17526007` para ingresar solicitudes Casino con el correo
+existente `17526007-2` para ingresar solicitudes Casino con el correo
 `andres.andradev@gmail.com`.
 
 La observacion de solo lectura del 2026-11-23 encontro la cuenta activa en la empresa

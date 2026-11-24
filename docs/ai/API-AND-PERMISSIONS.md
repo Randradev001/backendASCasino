@@ -47,6 +47,14 @@ se repite con `empCod` seleccionado. El correo se busca en `USUARIOS.UsuCorreo`.
 | `GET /casino/correos/:id` | Detalle e historial de intentos | 55/1/92 |
 | `POST /casino/correos/:id/reintentar` | Devolver un error/cancelado a la cola | 55/1/92 |
 | `POST /casino/correos-procesar` | Procesar un lote bajo demanda | 55/1/92 |
+| `GET/POST /casino/maestros/solicitantes` | Listar y crear solicitantes Casino | 55/10/12 |
+| `PUT/DELETE /casino/maestros/solicitantes/:id` | Editar o eliminar solicitantes sin pedidos | 55/10/12 |
+| `POST /casino/cargas/validar` | Validar una plantilla XLSX sin escribir datos | 55/10/13 |
+| `POST /casino/cargas/importar` | Aplicar la plantilla completa en una transacción | 55/10/13 |
+
+Las cuatro matrices mensuales aceptan `from` y `to` en formato `YYYY-MM-DD`, con ambos
+límites opcionales. Ya no reciben `year`: las columnas se generan como períodos mes/año
+del rango solicitado, incluso cuando cruza de año. React abre con los últimos 30 días.
 
 La respuesta de `GET /casino/bi/pedidos` incluye `conclusions`, con cuatro lecturas
 ejecutivas, y `assistant`, con preguntas sugeridas y respuestas fundamentadas en los
@@ -157,6 +165,8 @@ pero el backend vuelve a validar cada operación.
 | `/casino/consultas/motivo` | 55/5/4, `react.casinoReport.motivo` | Pedidos por motivo |
 | `/casino/consultas/descarga-general` | 55/5/5, `react.casinoReport.descargaGeneral` | Descarga general |
 | `/casino/correos` | 55/1/92, `react.casinoMail.status` | Estado y reintentos de correos |
+| `/casino/maestros/solicitantes` | 55/10/12, `react.casinoMaster.solicitantes` | CRUD de solicitantes |
+| `/casino/cargas` | 55/10/13, `react.casinoLoad.center` | Validación e importación XLSX |
 | `/personas` | Llamados GX de Personas | Listado de personas |
 | `/personas/:rut` | Navegación interna | Ficha de persona |
 | `/seguridad/*` | Llamados GX de Seguridad | Administración protegida |

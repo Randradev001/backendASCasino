@@ -14,6 +14,19 @@ const optionalInteger = (value, label) => {
   return parsed;
 };
 
+const optionalDate = (value, label) => {
+  if (value === undefined || value === null || value === '') return null;
+  const text = String(value).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw new SecurityError(400, 'VALIDATION_ERROR', `${label} no es valida.`);
+  const year = Number(text.slice(0, 4));
+  if (year < 2000 || year > 2100) throw new SecurityError(400, 'VALIDATION_ERROR', `${label} no es valida.`);
+  const date = new Date(`${text}T00:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== text) {
+    throw new SecurityError(400, 'VALIDATION_ERROR', `${label} no es valida.`);
+  }
+  return text;
+};
+
 const normalizeReport = (value) => {
   const report = String(value || '').toLowerCase();
   if (!REPORTS[report]) throw new SecurityError(404, 'REPORT_NOT_FOUND', 'La consulta no existe.');
@@ -21,10 +34,12 @@ const normalizeReport = (value) => {
 };
 
 const normalizeQuery = (query = {}) => {
-  const year = Number(query.year || new Date().getFullYear());
-  if (!Number.isInteger(year) || year < 2000 || year > 2100) throw new SecurityError(400, 'VALIDATION_ERROR', 'El año no es valido.');
+  const from = optionalDate(query.from, 'La fecha desde');
+  const to = optionalDate(query.to, 'La fecha hasta');
+  if (from && to && from > to) throw new SecurityError(400, 'VALIDATION_ERROR', 'La fecha desde no puede ser posterior a la fecha hasta.');
   return {
-    year,
+    from,
+    to,
     casinoId: optionalInteger(query.casinoId, 'El casino'),
     categoryId: optionalInteger(query.categoryId, 'El tipo de producto'),
     motiveId: optionalInteger(query.motiveId, 'El motivo'),

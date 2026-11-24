@@ -8,10 +8,10 @@ const EVENT_SUBJECTS = {
 
 const enqueueOrderEvent = async (executor, { empCod, orderNumber, eventType, login }) => {
   if (!EVENT_SUBJECTS[eventType]) throw new Error(`Tipo de correo Casino no soportado: ${eventType}`);
-  const recipientExpression = eventType === 'ORDER_SENT' ? 'RTRIM(C.CASIEmail)' : 'RTRIM(F.PerEmail)';
+  const recipientExpression = eventType === 'ORDER_SENT' ? 'RTRIM(C.CASIEmail)' : 'RTRIM(S.SOLEmail)';
   const join = eventType === 'ORDER_SENT'
     ? 'JOIN SSP06MACasinosPlanta C ON C.GECODEMP=P.GECODEMP AND C.CASICod=P.CASICod'
-    : 'JOIN FPPersonas F ON F.GECODEMP=P.GECODEMP AND F.PerRut=P.PedRutSolicita';
+    : 'JOIN SSP06MASolicitante S ON S.GECODEMP=P.GECODEMP AND S.SOLRut=P.PedRutSolicita';
   await requestFor(executor).input('empCod', sql.Int, empCod).input('orderNumber', sql.Decimal(10, 0), orderNumber)
     .input('eventType', sql.VarChar(40), eventType).input('subject', sql.VarChar(200), `${EVENT_SUBJECTS[eventType]} #${orderNumber}`)
     .input('login', sql.VarChar(10), login).query(`

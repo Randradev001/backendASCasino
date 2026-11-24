@@ -10,23 +10,23 @@ test('normaliza paginacion y filtros sin aceptar empresa desde pantalla', () => 
 });
 
 test('valida los campos propios de los cinco maestros', () => {
-  assert.deepEqual(normalizePayload('casinos', { name: 'Casino Aves', rut: '14332241', dv: 'k', email: 'casino@empresa.cl' }), {
-    name: 'Casino Aves', rut: 14332241, dv: 'K', email: 'casino@empresa.cl'
+  assert.deepEqual(normalizePayload('casinos', { externalCode: 'CAS01', name: 'Casino Aves', rut: '14332241', dv: 'k', email: 'casino@empresa.cl' }), {
+    externalCode: 'CAS01', active: 1, name: 'Casino Aves', rut: 14332241, dv: 'K', email: 'casino@empresa.cl'
   });
-  assert.deepEqual(normalizePayload('destinos', { name: 'Sala de reuniones' }), { name: 'Sala de reuniones' });
-  assert.deepEqual(normalizePayload('motivos', { name: 'Capacitación' }), { name: 'Capacitación' });
-  assert.deepEqual(normalizePayload('tipos-producto', { name: 'Colaciones', order: 2, access: 1 }), {
-    name: 'Colaciones', order: 2, access: 1
+  assert.deepEqual(normalizePayload('destinos', { externalCode: 'DEST01', name: 'Sala de reuniones' }), { externalCode: 'DEST01', name: 'Sala de reuniones', active: 1 });
+  assert.deepEqual(normalizePayload('motivos', { externalCode: 'MOT01', name: 'Capacitación' }), { externalCode: 'MOT01', name: 'Capacitación', active: 1 });
+  assert.deepEqual(normalizePayload('tipos-producto', { externalCode: 'TP01', name: 'Colaciones', order: 2, access: 1 }), {
+    externalCode: 'TP01', active: 1, name: 'Colaciones', order: 2, access: 1
   });
-  assert.deepEqual(normalizePayload('productos', { name: 'Almuerzo', price: 4500, casinoId: 1, categoryId: 2 }), {
-    name: 'Almuerzo', price: 4500, casinoId: 1, categoryId: 2
+  assert.deepEqual(normalizePayload('productos', { externalCode: 'PROD01', name: 'Almuerzo', price: 4500, casinoId: 1, categoryId: 2 }), {
+    externalCode: 'PROD01', active: 1, name: 'Almuerzo', price: 4500, casinoId: 1, categoryId: 2
   });
 });
 
 test('rechaza acceso, precio y correo invalidos', () => {
-  assert.throws(() => normalizePayload('tipos-producto', { name: 'Privado', order: 1, access: 2 }), /acceso/);
-  assert.throws(() => normalizePayload('productos', { name: 'Producto', price: -1, casinoId: 1, categoryId: 1 }), /precio/);
-  assert.throws(() => normalizePayload('casinos', { name: 'Casino', rut: 1, dv: '1', email: 'invalido' }), /correo/);
+  assert.throws(() => normalizePayload('tipos-producto', { externalCode: 'TP01', name: 'Privado', order: 1, access: 2 }), /acceso/);
+  assert.throws(() => normalizePayload('productos', { externalCode: 'PROD01', name: 'Producto', price: -1, casinoId: 1, categoryId: 1 }), /precio/);
+  assert.throws(() => normalizePayload('casinos', { externalCode: 'CAS01', name: 'Casino', rut: 1, dv: '1', email: 'invalido' }), /correo/);
 });
 
 test('mapea cada maestro a su programa de seguridad', () => {

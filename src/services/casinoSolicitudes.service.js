@@ -108,7 +108,7 @@ const getRequests = async (query, context) => {
              ISNULL(SUM(CONVERT(decimal(18,2),D.PED1Cantidad)*D.PED1Precio),0) Amount
       FROM SSP06OPPedidosPlanta P
       INNER JOIN SSP06OPPedidosPlantaDet D ON D.GECODEMP=P.GECODEMP AND D.PEDNumero=P.PEDNumero
-      LEFT JOIN FPPersonas PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
+      LEFT JOIN SSP06VWSolicitanteHistorico PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
       LEFT JOIN SSP06MADestinosPlanta DE ON DE.GECODEMP=P.GECODEMP AND DE.DESTICod=P.DESTICod
       LEFT JOIN SSP06MAMotivoPedidos M ON M.GECODEMP=P.GECODEMP AND M.Mot6Cod=P.Mot6Cod
       WHERE ${where}
@@ -127,7 +127,7 @@ const getRequests = async (query, context) => {
              ISNULL(SUM(CONVERT(decimal(18,2),D.PED1Cantidad)*D.PED1Precio),0) Amount
       FROM SSP06OPPedidosPlanta P
       INNER JOIN SSP06OPPedidosPlantaDet D ON D.GECODEMP=P.GECODEMP AND D.PEDNumero=P.PEDNumero
-      LEFT JOIN FPPersonas PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
+      LEFT JOIN SSP06VWSolicitanteHistorico PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
       LEFT JOIN SSP06MADestinosPlanta DE ON DE.GECODEMP=P.GECODEMP AND DE.DESTICod=P.DESTICod
       LEFT JOIN SSP06MAMotivoPedidos M ON M.GECODEMP=P.GECODEMP AND M.Mot6Cod=P.Mot6Cod
       WHERE ${where}
@@ -165,7 +165,7 @@ const loadScopedDetail = async (executor, session, casino, orderNumber) => reque
            P.PEDControlPago,ISNULL(E.EVPedEvaluacion,0) Evaluation,RTRIM(ISNULL(E.EvPedObsUsuario,'')) UserComment,
            RTRIM(ISNULL(E.EVPEDOBSCasino,'')) CasinoComment,E.EVPEDFecha EvaluationAt
     FROM SSP06OPPedidosPlanta P
-    LEFT JOIN FPPersonas PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
+    LEFT JOIN SSP06VWSolicitanteHistorico PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
     LEFT JOIN SSP06MACasinosPlanta C ON C.GECODEMP=P.GECODEMP AND C.CASICod=P.CASICod
     LEFT JOIN SSP06MADestinosPlanta DE ON DE.GECODEMP=P.GECODEMP AND DE.DESTICod=P.DESTICod
     LEFT JOIN SSP06MAMotivoPedidos M ON M.GECODEMP=P.GECODEMP AND M.Mot6Cod=P.Mot6Cod
@@ -239,7 +239,7 @@ const getPersonHistory = async (rutValue, context) => {
              SUM(CONVERT(decimal(18,2),D.PED1Cantidad)*D.PED1Precio) Amount
       FROM SSP06OPPedidosPlanta P
       INNER JOIN SSP06OPPedidosPlantaDet D ON D.GECODEMP=P.GECODEMP AND D.PEDNumero=P.PEDNumero
-      LEFT JOIN FPPersonas PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
+      LEFT JOIN SSP06VWSolicitanteHistorico PE ON PE.GECODEMP=P.GECODEMP AND PE.PerRut=P.PedRutSolicita
       LEFT JOIN SSP06MADestinosPlanta DE ON DE.GECODEMP=P.GECODEMP AND DE.DESTICod=P.DESTICod
       LEFT JOIN SSP06MAMotivoPedidos M ON M.GECODEMP=P.GECODEMP AND M.Mot6Cod=P.Mot6Cod
       WHERE P.GECODEMP=@empCod AND P.CASICod=@casinoId AND P.PedRutSolicita=@rut AND P.PedEstadoIngreso<>0

@@ -8,6 +8,9 @@ const reportsController = require('../controllers/casinoConsultasController');
 const generalDownloadController = require('../controllers/casinoDescargaController');
 const evaluationsController = require('../controllers/casinoEvaluacionesController');
 const mailController = require('../controllers/casinoCorreoController');
+const loadController = require('../controllers/casinoCargaController');
+const requestersController = require('../controllers/casinoSolicitantesController');
+const multer = require('multer');
 const authContext = require('../middleware/authContext');
 const { requireAnyPermission, requirePermission } = require('../middleware/securityAuthorization');
 
@@ -22,6 +25,7 @@ const masterPermissions = { casinos: 1, destinos: 2, motivos: 3, 'tipos-producto
 const requireMasterPermission = requirePermission((req) => ({ sistema: 55, modulo: 10, programa: masterPermissions[req.params.catalogo] }));
 const reportPermissions = { 'tipo-producto': 1, 'centro-costo': 2, persona: 3, motivo: 4 };
 const requireReportPermission = requirePermission((req) => ({ sistema: 55, modulo: 5, programa: reportPermissions[req.params.consulta] }));
+const workbookUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 1 } });
 
 router.use(authContext);
 router.get('/bi/pedidos', requireAnyPermission(consultationPermissions), biController.dashboard);
@@ -33,6 +37,12 @@ router.get('/correos', requirePermission({ sistema: 55, modulo: 1, programa: 92 
 router.get('/correos/:id', requirePermission({ sistema: 55, modulo: 1, programa: 92 }), mailController.detail);
 router.post('/correos/:id/reintentar', requirePermission({ sistema: 55, modulo: 1, programa: 92 }), mailController.retry);
 router.post('/correos-procesar', requirePermission({ sistema: 55, modulo: 1, programa: 92 }), mailController.process);
+router.post('/cargas/validar', requirePermission({ sistema: 55, modulo: 10, programa: 13 }), workbookUpload.single('file'), loadController.validate);
+router.post('/cargas/importar', requirePermission({ sistema: 55, modulo: 10, programa: 13 }), workbookUpload.single('file'), loadController.apply);
+router.get('/maestros/solicitantes', requirePermission({ sistema: 55, modulo: 10, programa: 12 }), requestersController.list);
+router.post('/maestros/solicitantes', requirePermission({ sistema: 55, modulo: 10, programa: 12 }), requestersController.create);
+router.put('/maestros/solicitantes/:id', requirePermission({ sistema: 55, modulo: 10, programa: 12 }), requestersController.update);
+router.delete('/maestros/solicitantes/:id', requirePermission({ sistema: 55, modulo: 10, programa: 12 }), requestersController.remove);
 router.get('/pedidos/contexto', requirePermission(orderPermission), ordersController.context);
 router.post('/pedidos', requirePermission(orderPermission), ordersController.create);
 router.post('/pedidos/:numero/enviar', requirePermission(orderPermission), ordersController.send);

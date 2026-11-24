@@ -59,22 +59,28 @@ const normalizePayload = (catalogValue, body = {}) => {
       throw new SecurityError(400, 'VALIDATION_ERROR', 'El correo no es valido.');
     }
     return {
+      externalCode: text(body.externalCode, 'El código externo', 30),
+      active: body.active === false || body.active === 0 || body.active === '0' ? 0 : 1,
       name: text(body.name, 'El nombre', 40),
       rut: integer(body.rut, 'El RUT', { min: 1, max: 2147483647 }),
       dv: text(body.dv, 'El digito verificador', 1).toUpperCase(),
       email
     };
   }
-  if (catalog === 'destinos' || catalog === 'motivos') return { name: text(body.name, 'El nombre', 40) };
+  if (catalog === 'destinos' || catalog === 'motivos') return { externalCode: text(body.externalCode, 'El código externo', 30), name: text(body.name, 'El nombre', 40), active: body.active === false || body.active === 0 || body.active === '0' ? 0 : 1 };
   if (catalog === 'tipos-producto') {
     return {
+      externalCode: text(body.externalCode, 'El código externo', 30),
+      active: body.active === false || body.active === 0 || body.active === '0' ? 0 : 1,
       name: text(body.name, 'El nombre', 40),
       order: integer(body.order, 'El orden', { max: 32767 }),
       access: integer(body.access, 'El tipo de acceso', { max: 1 })
     };
   }
   return {
-    name: text(body.name, 'El nombre', 40),
+    externalCode: text(body.externalCode, 'El código externo', 30),
+    active: body.active === false || body.active === 0 || body.active === '0' ? 0 : 1,
+    name: text(body.name, 'El nombre', 60),
     price: integer(body.price, 'El precio', { max: 9999999999 }),
     casinoId: integer(body.casinoId, 'El casino', { min: 1 }),
     categoryId: integer(body.categoryId, 'El tipo de producto', { min: 1 })

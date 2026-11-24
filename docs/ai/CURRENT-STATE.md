@@ -38,6 +38,9 @@ La compilación del frontend usa `/casino` como ruta base. En el dominio previst
 entrada pública es `https://www.adpsmart.cl/casino/`; las rutas React de las tablas
 inferiores son relativas a esa base.
 
+Todos los controles de fecha del frontend usan MUI DatePicker con adaptador Moment,
+locale `es-CL`, formato visible `DD/MM/YYYY` y contrato API `YYYY-MM-DD`.
+
 El backend aplica además límites de cuerpo, rate limit al login, respuestas de error
 JSON sin stack, `Cache-Control: no-store` y headers defensivos. CORS sigue admitiendo
 hosts privados durante desarrollo, pero en producción exige la lista `CORS_ORIGINS`.
@@ -55,10 +58,12 @@ hosts privados durante desarrollo, pero en producción exige la lista `CORS_ORIG
 | Controlar solicitudes del Casino | Implementado; catálogo y tabla aplicados en `BDADP_CASINO` | `/casino/solicitudes` |
 | Historial y detalle de pedidos | Implementado | `/casino/pedidos/historial` |
 | Maestros de Casino | Implementados los cinco CRUD con listados operacionales, filtros y exportaciones | `/casino/maestros/*` |
-| Consultas mensuales de consumo | Implementadas las cuatro matrices enero–diciembre | `/casino/consultas/*` · 55/5/1–4 |
+| Consultas mensuales de consumo | Implementadas con rango de fechas y columnas mes/año dinámicas | `/casino/consultas/*` · 55/5/1–4 |
 | Descarga general de pedidos | Implementada con filtros, paginación y exportación | `/casino/consultas/descarga-general` · 55/5/5 |
 | Evaluaciones y control de pago | Implementados con automatización y auditoría | Pedidos 55/1/1 · Casino 55/1/10 |
 | Correos Casino | Outbox, procesador, reintentos y pantalla de estatus implementados | `/casino/correos` · 55/1/92 |
+| Solicitantes Casino | Tabla y CRUD sincronizados con Personas y Seguridad | `/casino/maestros/solicitantes` · 55/10/12 |
+| Centro de cargas | Validación XLSX y carga transaccional de seis catálogos | `/casino/cargas` · 55/10/13 |
 
 El panel ejecutivo presenta cuatro conclusiones calculadas por el backend: cumplimiento,
 concentración por faenadora, producto líder y tendencia. También incluye un asistente
@@ -79,7 +84,7 @@ ejecutivo`. El menú dinámico autorizado agrega:
 - `Solicitudes Casino > Operacional > Ver solicitudes` para 55/1/10.
 - `Solicitudes Casino > Consultas > Historial de Pedidos` para 55/5/6.
 - Los cinco maestros en el módulo histórico 55/10, cada uno con su propio programa.
-- Las cuatro consultas anuales en 55/5/1–4: tipo de producto, centro de costo por
+- Las cuatro consultas por rango en 55/5/1–4: tipo de producto, centro de costo por
   división, persona y motivo.
 - La descarga general 55/5/5, con detalle por producto e intervalos de fecha abiertos.
 - Evaluación visual de pedidos entregados y control de pago automático/manual auditado.
@@ -92,12 +97,17 @@ ejecutivo`. El menú dinámico autorizado agrega:
 - `GECODEMP` y `PEDSolicita` provienen de la sesión.
 - `PedRutSolicita` proviene del usuario autenticado o de una persona seleccionada por
   un usuario 55/1/90.
+- Un usuario 55/1/90 puede abrir el contexto y seleccionar un solicitante activo aunque
+  su propio RUT no exista en `SSP06MASolicitante`.
 - Los precios se vuelven a consultar en `SSP06MAProducto`.
 - Los tipos con `TPPRAcceso=1` solo se muestran y aceptan al crear pedidos cuando el
   usuario tiene además 55/1/91. Los tipos con valor 0 están liberados.
+- La plantilla del rol `CAS_USER` incluye 55/1/91, por lo que los solicitantes cargados
+  pueden ver todos los tipos de producto activos. La pantalla elige inicialmente un
+  casino que tenga productos asociados.
 - React informa si el usuario ve el catálogo liberado o el catálogo completo. Una
   petición manual por un producto restringido responde 403 sin crear el borrador.
-- El detalle toma división, subdivisión y centro de costo desde `FPPersonas`.
+- El detalle toma división, subdivisión y centro de costo desde `SSP06MASolicitante`.
 - Guardar crea estado 0; enviar cambia a estado 1.
 - El Casino de la sesión se resuelve por `USUARIOS.UsuRut = SSP06MACasinosPlanta.CASIRut`.
   Con 55/1/10 puede aprobar 1 → 2 confirmando fecha/hora o rechazar 1 → 5 con comentario.
@@ -108,11 +118,22 @@ ejecutivo`. El menú dinámico autorizado agrega:
 - El detalle de un pedido histórico se consulta por empresa autenticada y número.
 - `Crear y enviar` exige confirmación en React; al completarse abre el historial y el
   detalle del pedido recién creado mediante el parámetro de presentación `pedido`.
-- Si la ficha de Personas no permite imputar el consumo, el contexto identifica cuáles
+- Si la ficha del solicitante no permite imputar el consumo, el contexto identifica cuáles
   campos faltan entre división, subdivisión y centro de costo. React bloquea creación y
   envío, ofrece revisar la ficha y, para 55/1/90, seleccionar otro solicitante válido.
 
 ## Datos observados
+
+El 2026-11-23 se habilitó localmente la empresa 6100, Faenadora San Vicente.
+La cuenta 17526007 conserva su credencial y tiene ADMINFULL en esta empresa.
+Se importaron 72 solicitantes, 17 tipos, 48 productos, 2 casinos, 16 destinos y
+13 motivos. Ambos casinos tienen temporalmente a Andrés (17526007-2) como
+responsable, por autorización explícita. Reemplazarlo cuando se disponga del RUT
+real de Manuel; no se creó una identidad ficticia. El archivo original no cambió.
+Datos tributarios y domicilio de la empresa pendientes (RUT técnico 0 y textos vacíos).
+Los solicitantes nuevos reciben como clave inicial los últimos cuatro dígitos de su RUT;
+se almacena solo el hash moderno y una reimportación no reemplaza claves existentes.
+Scripts reproducibles: `20261123_empresa_6100.sql` y `scripts/carga-san-vicente-6100.js`.
 
 Los siguientes valores fueron comprobados en `BDADP_CASINO`; son una fotografía y no
 deben convertirse en constantes:
@@ -137,18 +158,19 @@ deben convertirse en constantes:
 | Notificaciones | `SSP06OPCorreoOutbox`, `SSP06OPCorreoIntento` |
 | Catálogo Casino | `SSP06MACasinosPlanta`, `SSP06MADestinosPlanta`, `SSP06MAMotivoPedidos` |
 | Productos | `SSP06MATPProducto`, `SSP06MAProducto` |
-| Personas y ubicación | `FPPersonas`, `FPDivision`, `FPDivisionSub`, `FPCenCos` |
+| Personas históricas y ubicación | `FPPersonas`, `FPDivision`, `FPDivisionSub`, `FPCenCos` |
 | Correlativo | `MACorrelativos` |
 | Seguridad | `USUARIOS`, `SEGUSUEMP`, `ASIGSIST`, `ASIG`, `ASIGPROG`, `ASIGPROG1` |
+| Solicitantes operativos y cargas | `SSP06MASolicitante`, `SSP06VWSolicitanteHistorico`, `SSP06OPCargaCasino` |
 | Roles | `UROLES`, `URolesPorUser` |
 | Sesiones y credenciales | `SEGSESION`, `SEGUSUCRED` |
 
 ## Estado de usuarios relevante
 
-- La ficha de `MANDRADE` no tiene `DivId`, `SdiId` ni `CecId`; la creación debe exigir
-  que seleccione otra persona o que se complete la ficha.
-- `6563483` aparece inactivo en `FPPersonas`, aunque conserva permisos. No bloquearlo
-  automáticamente sin decisión del negocio.
+- Para crear pedidos, el RUT autenticado debe existir activo en `SSP06MASolicitante` y
+  tener `DivId`, `SdiId` y `CecId` completos.
+- `FPPersonas` no habilita por sí sola la creación de pedidos. Se consulta únicamente en
+  Personas y como respaldo de nombres para pedidos históricos mediante la vista.
 
 ## Pendientes conocidos
 
@@ -157,23 +179,25 @@ deben convertirse en constantes:
    implementada, pero el proveedor permanece deshabilitado localmente.
 2. Confirmar los códigos organizacionales de Faenadora San Vicente y Lo Miranda. Solo
    Rosario está homologada; no asignar códigos por parecido de nombre.
-3. Definir si una persona con `PerEstadoLab` inactivo puede crear pedidos.
+3. Completar la carga inicial de solicitantes y sus ubicaciones antes de habilitar el flujo.
 4. Realizar validación funcional controlada con usuarios de negocio para creación,
    envío, filtros históricos y detalle.
 5. Validar funcionalmente aprobación y rechazo con un usuario asociado a cada Casino.
 6. Completar la recuperación de borradores en React y ofrecer un destino posterior
    al envío para solicitantes sin el permiso de historial 55/5/6.
+7. Registrar al responsable `manuel.rodriguezcabello@sodexo.com` como solicitante/usuario
+   antes de aplicar la plantilla San Vicente. `ProdNombre` ya admite 60 caracteres.
 
 ## Verificación vigente
 
-- Backend: 56 pruebas correctas con `node --test` al 2026-11-17, incluidas seis
-  verificaciones HTTP y tres de compatibilidad de dependencias actualizadas.
+- Backend: 61 pruebas correctas con `node --test` al 2026-11-23, incluidas validaciones
+  de rangos abiertos, períodos que cruzan de año y reglas de carga Casino.
 - `npm audit` completo y `--omit=dev`: 0 hallazgos tanto en backend como frontend
   al 2026-11-16. Los gates de ambos proyectos fallan desde severidad baja.
 - Runtime soportado: Node 24.22.3, declarado en `.nvmrc` y `engines` de ambos
   repositorios. Express mínimo 4.22.3; frontend Axios mínimo 1.21.1 y Vite 7.3.8.
-- Frontend: cinco pruebas de regresión de seguridad, ESLint dirigido y build de
-  producción correctos; sin source maps y con PWA generada.
+- Frontend: ESLint dirigido y build de producción correctos al 2026-11-23; sin source
+  maps y con PWA generada.
 - Workbox usa glob 14.0.6 y un fork local revisable de deepmerge 4.3.1. El fork
   corrige CVE-2026-93753, aún sin parche oficial; se valida mediante pruebas y no
   mediante el catálogo de npm audit. Formik conserva su dependencia separada.
@@ -191,7 +215,8 @@ deben convertirse en constantes:
   los cinco catálogos y se eliminaron los registros temporales.
 - Se verificó `TPPRAcceso` marcando temporalmente un tipo como restringido: el usuario
   común recibió seis tipos, el autorizado siete y la petición manipulada fue rechazada.
-  El tipo se restauró a su valor original; 55/1/91 permanece sin asignaciones efectivas.
+  El tipo se restauró a su valor original; 55/1/91 está asignado a la plantilla
+  `CAS_USER` desde el 2026-11-23.
 - Las cuatro consultas usan estado 3, fecha de entrega del detalle y el importe
   `PED1Cantidad × PED1Precio`. En 2026 las cuatro conciliaron un total de $10.747.
 - El script `database/20261117_casino_evaluaciones_pago.sql` creó el historial auditable

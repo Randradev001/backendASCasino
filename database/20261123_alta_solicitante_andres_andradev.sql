@@ -18,7 +18,7 @@ GO
 DECLARE @GECODEMP decimal(10,0) = 1;
 DECLARE @Login varchar(10) = '17526007';
 DECLARE @Rut int = 17526007;
-DECLARE @Dv char(1) = '7';
+DECLARE @Dv char(1) = '2';
 DECLARE @Email varchar(50) = 'andres.andradev@gmail.com';
 DECLARE @Nombres varchar(40) = 'Andres';
 DECLARE @ApellidoPaterno varchar(40) = '';
@@ -40,7 +40,7 @@ IF NOT EXISTS (
   FROM dbo.USUARIOS
   WHERE RTRIM(UsuLogin)=@Login AND UsuRut=@Rut AND RTRIM(UsuDV)=@Dv
 )
-  THROW 51001, 'No existe la cuenta esperada 17526007-7 en USUARIOS. No se aplicaron cambios.', 1;
+  THROW 51001, 'No existe la cuenta esperada 17526007-2 en USUARIOS. No se aplicaron cambios.', 1;
 
 IF NOT EXISTS (
   SELECT 1 FROM dbo.SEGUSUEMP
