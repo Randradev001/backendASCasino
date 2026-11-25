@@ -93,4 +93,23 @@ const permissionForCatalog = (catalogValue) => ({
   programa: CATALOGS[normalizeCatalog(catalogValue)].permission
 });
 
-module.exports = { CATALOGS, normalizeCatalog, normalizeListQuery, normalizePayload, permissionForCatalog, integer };
+const IMAGE_TYPES = {
+  'image/jpeg': (buffer) => buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff,
+  'image/png': (buffer) => buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  'image/webp': (buffer) => buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP'
+};
+
+const normalizeImage = (file) => {
+  if (!file) return null;
+  const buffer = file.buffer;
+  const mimeType = String(file.mimetype || '').toLowerCase();
+  if (!Buffer.isBuffer(buffer) || !IMAGE_TYPES[mimeType]?.(buffer)) {
+    throw new SecurityError(400, 'INVALID_PRODUCT_IMAGE', 'La imagen debe ser un archivo JPEG, PNG o WebP válido.');
+  }
+  if (buffer.length > 2 * 1024 * 1024) {
+    throw new SecurityError(400, 'PRODUCT_IMAGE_TOO_LARGE', 'La imagen admite un máximo de 2 MB.');
+  }
+  return { buffer, mimeType };
+};
+
+module.exports = { CATALOGS, normalizeCatalog, normalizeListQuery, normalizePayload, normalizeImage, permissionForCatalog, integer };

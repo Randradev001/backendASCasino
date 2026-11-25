@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { normalizeDashboardQuery, statusLabel, buildBusinessAnalysis } = require('../src/services/casinoBi.rules');
+const { normalizeDashboardQuery, plantsForCompany, statusLabel, buildBusinessAnalysis } = require('../src/services/casinoBi.rules');
 const { requireAnyPermission } = require('../src/middleware/securityAuthorization');
 
 test('normaliza filtros BI sin aceptar la empresa de la pantalla', () => {
@@ -15,6 +15,13 @@ test('normaliza filtros BI sin aceptar la empresa de la pantalla', () => {
 test('rechaza rangos y faenadoras invalidas', () => {
   assert.throws(() => normalizeDashboardQuery({ from: '2020-04-01', to: '2020-03-01' }), (error) => error.code === 'VALIDATION_ERROR');
   assert.throws(() => normalizeDashboardQuery({ plant: 'el-milagro' }), (error) => error.code === 'VALIDATION_ERROR');
+});
+
+test('limita las plantas a la empresa donde está creado el usuario', () => {
+  assert.deepEqual(plantsForCompany(1, 'Procesadora de Alimentos del Sur').map((plant) => plant.id), ['rosario']);
+  assert.deepEqual(plantsForCompany(6100, 'Faenadora San Vicente').map((plant) => plant.id), ['san-vicente']);
+  assert.deepEqual(plantsForCompany(6200, 'Faenadora Lo Miranda').map((plant) => plant.id), ['lo-miranda']);
+  assert.deepEqual(plantsForCompany(9999, 'Empresa sin homologar'), []);
 });
 
 test('conserva los estados del flujo de pedidos GeneXus', () => {

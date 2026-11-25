@@ -1,6 +1,6 @@
 const { getPool, sql } = require('../conectorMysql/conectorSqlServer');
 const { SecurityError } = require('./seguridad.service');
-const { PLANTS, normalizeDashboardQuery, statusLabel, buildBusinessAnalysis } = require('./casinoBi.rules');
+const { plantsForCompany, normalizeDashboardQuery, statusLabel, buildBusinessAnalysis } = require('./casinoBi.rules');
 
 const clean = (value) => String(value || '').trim();
 const numeric = (value) => Number(value || 0);
@@ -60,6 +60,16 @@ const dashboard = async (query, context) => {
 
   const filters = normalizeDashboardQuery(query);
   const pool = await getPool();
+  const companyResult = await pool.request().input('empCod', sql.Int, context.empCod)
+    .query('SELECT RTRIM(ISNULL(GERAZSOC,\'\')) companyName FROM G_Emp WHERE GECODEMP=@empCod');
+  const companyName = clean(companyResult.recordset[0]?.companyName);
+  const availablePlants = plantsForCompany(context.empCod, companyName);
+  if (!availablePlants.length) {
+    throw new SecurityError(409, 'PLANT_NOT_CONFIGURED', 'La empresa del usuario no tiene una planta homologada para el dashboard.');
+  }
+  if (filters.plant !== 'all' && !availablePlants.some((plant) => plant.id === filters.plant)) {
+    throw new SecurityError(403, 'PLANT_NOT_ALLOWED', 'La planta indicada no pertenece a la empresa activa del usuario.');
+  }
   const request = bindFilters(pool.request(), filters, context);
   const cte = baseCte(filters);
   const result = await request.query(`
@@ -130,7 +140,7 @@ const dashboard = async (query, context) => {
 
   const summary = result.recordsets[0]?.[0] || {};
   const rowsByPlant = new Map((result.recordsets[1] || []).map((row) => [clean(row.PlantKey), mapPlant(row)]));
-  const plants = PLANTS.map((plant) => rowsByPlant.get(plant.id) || {
+  const plants = availablePlants.map((plant) => rowsByPlant.get(plant.id) || {
     id: plant.id,
     name: plant.name,
     mapped: plant.codes.length > 0,
@@ -151,6 +161,8 @@ const dashboard = async (query, context) => {
       dataTo: summary.DataTo || null,
       filters,
       company: Number(context.empCod),
+      companyName,
+      availablePlants: availablePlants.map(({ id, name }) => ({ id, name })),
       source: 'SSP06OPPedidosPlanta / SSP06OPPedidosPlantaDet'
     },
     kpis: {

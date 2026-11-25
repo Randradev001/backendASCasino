@@ -1,6 +1,6 @@
 # Estado actual de ADP Casino
 
-Última verificación funcional y de pruebas locales: 2026-11-17.
+Última verificación funcional y de pruebas locales: 2026-11-24.
 Los datos y validaciones funcionales históricos conservan su fecha 2026-10-16.
 
 ## Alcance activo
@@ -57,7 +57,7 @@ hosts privados durante desarrollo, pero en producción exige la lista `CORS_ORIG
 | Crear solicitud Casino | Implementado | `/casino/pedidos/nuevo` |
 | Controlar solicitudes del Casino | Implementado; catálogo y tabla aplicados en `BDADP_CASINO` | `/casino/solicitudes` |
 | Historial y detalle de pedidos | Implementado | `/casino/pedidos/historial` |
-| Maestros de Casino | Implementados los cinco CRUD con listados operacionales, filtros y exportaciones | `/casino/maestros/*` |
+| Maestros de Casino | Implementados los cinco CRUD con listados operacionales, filtros, exportaciones y carga de imagen en productos | `/casino/maestros/*` |
 | Consultas mensuales de consumo | Implementadas con rango de fechas y columnas mes/año dinámicas | `/casino/consultas/*` · 55/5/1–4 |
 | Descarga general de pedidos | Implementada con filtros, paginación y exportación | `/casino/consultas/descarga-general` · 55/5/5 |
 | Evaluaciones y control de pago | Implementados con automatización y auditoría | Pedidos 55/1/1 · Casino 55/1/10 |
@@ -71,6 +71,11 @@ determinista de consultas rápidas que usa exclusivamente esos agregados; no con
 modelo generativo ni transmite datos a un proveedor externo. La administración de
 Seguridad conserva sus rutas y menú protegidos, pero ya no ocupa un bloque dentro del
 panel ejecutivo.
+
+El selector de faenadora del panel se construye desde `metadata.availablePlants`,
+calculado por el backend según `req.context.empCod` y la razón social de `G_Emp`. La
+empresa 1 se homologa con Rosario y la 6100 con San Vicente. React no mantiene una lista
+global fija y el backend rechaza una planta ajena aunque se manipule la petición.
 
 El historial mantiene filtros, listado, detalle, gráfica por tipo y conclusión. Los KPI
 superiores y los contadores visuales por tipo/producto se retiraron para reducir la
@@ -190,13 +195,14 @@ deben convertirse en constantes:
 
 ## Verificación vigente
 
-- Backend: 61 pruebas correctas con `node --test` al 2026-11-23, incluidas validaciones
-  de rangos abiertos, períodos que cruzan de año y reglas de carga Casino.
+- Backend: 63 pruebas correctas con `node --test` al 2026-11-24, incluidas validaciones
+  de rangos abiertos, períodos que cruzan de año, reglas de carga Casino y firmas de
+  imagen de producto.
 - `npm audit` completo y `--omit=dev`: 0 hallazgos tanto en backend como frontend
   al 2026-11-16. Los gates de ambos proyectos fallan desde severidad baja.
 - Runtime soportado: Node 24.22.3, declarado en `.nvmrc` y `engines` de ambos
   repositorios. Express mínimo 4.22.3; frontend Axios mínimo 1.21.1 y Vite 7.3.8.
-- Frontend: ESLint dirigido y build de producción correctos al 2026-11-23; sin source
+- Frontend: ESLint dirigido y build de producción correctos al 2026-11-24; sin source
   maps y con PWA generada.
 - Workbox usa glob 14.0.6 y un fork local revisable de deepmerge 4.3.1. El fork
   corrige CVE-2026-93753, aún sin parche oficial; se valida mediante pruebas y no
@@ -213,6 +219,14 @@ deben convertirse en constantes:
   `TPPRAcceso`, inicializó los siete tipos existentes como liberados y registró los
   llamados React de los cinco programas 55/10. Se verificó alta, edición y baja en
   los cinco catálogos y se eliminaron los registros temporales.
+- El maestro de productos permite cargar, reemplazar y quitar una imagen JPEG, PNG o
+  WebP de hasta 2 MB al crear o editar. El binario y su MIME quedan en
+  `SSP06MAProducto.PRODImagen` y `PRODImagenMime`, aislados por la empresa de sesión;
+  el cambio reproducible está en `database/20261124_casino_productos_imagen.sql`.
+- El catálogo de pedidos muestra la imagen específica cuando existe y conserva la
+  imagen genérica de la categoría como respaldo. Para San Vicente (empresa 6100) se
+  generaron y cargaron 48 JPEG, P1 a P48. La carga autocontenida para SQL Server 2016
+  está en `database/20261124_casino_productos_imagen_6100_data.sql`.
 - Se verificó `TPPRAcceso` marcando temporalmente un tipo como restringido: el usuario
   común recibió seis tipos, el autorizado siete y la petición manipulada fue rechazada.
   El tipo se restauró a su valor original; 55/1/91 está asignado a la plantilla

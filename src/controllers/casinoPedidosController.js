@@ -21,6 +21,16 @@ const context = async (req, res) => {
   }
 };
 
+const image = async (req, res) => {
+  try {
+    const result = await service.getProductImage(req.params.id, req.context);
+    res.type(result.mimeType).set('Cache-Control', 'private, max-age=86400');
+    return res.send(result.image);
+  } catch (error) {
+    return sendError(res, error);
+  }
+};
+
 const create = async (req, res) => {
   try {
     return res.status(201).json(await service.createDraft(
@@ -42,4 +52,4 @@ const send = async (req, res) => {
   }
 };
 
-module.exports = { context, create, send };
+module.exports = { context, image, create, send };

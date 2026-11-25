@@ -1,6 +1,6 @@
 const { getPool, sql } = require('../conectorMysql/conectorSqlServer');
 const { SecurityError } = require('./seguridad.service');
-const { normalizeCatalog, normalizeListQuery, normalizePayload, integer } = require('./casinoMaestros.rules');
+const { normalizeCatalog, normalizeListQuery, normalizePayload, normalizeImage, integer } = require('./casinoMaestros.rules');
 
 const clean = (value) => String(value ?? '').trim();
 const numeric = (value) => Number(value || 0);
@@ -36,6 +36,7 @@ const CONFIG = {
   productos: {
     table: 'SSP06MAProducto', id: 'PRODCodigo', idType: sql.Decimal(10, 0),
     source: `SELECT M.PRODCodigo id,RTRIM(M.PRODCodigoExterno) externalCode,RTRIM(M.ProdNombre) name,M.PRODPrecio price,M.CASICod casinoId,CONVERT(bit,M.PRODActivo) active,
+      CONVERT(bit,CASE WHEN M.PRODImagen IS NULL THEN 0 ELSE 1 END) hasImage,
       RTRIM(C.CASINom) casino,M.TPPRCod categoryId,RTRIM(T.TPPRNombre) category,COALESCE(T.TPPRAcceso,0) access,
       (SELECT COUNT(*) FROM SSP06OPPedidosPlantaDet D WHERE D.GECODEMP=M.GECODEMP AND D.PRODCodigo=M.PRODCodigo) usageCount
       FROM SSP06MAProducto M
@@ -129,8 +130,12 @@ const updateSql = (catalog, config) => ({
   productos: `UPDATE ${config.table} SET PRODCodigoExterno=@externalCode,TPPRCod=@categoryId,ProdNombre=@name,PRODPrecio=@price,CASICod=@casinoId,PRODActivo=@active WHERE GECODEMP=@empCod AND ${config.id}=@id`
 }[catalog]);
 
-const create = async (catalogValue, body, context) => {
+const bindImage = (request, image) => request.input('image', sql.VarBinary(sql.MAX), image?.buffer || null)
+  .input('imageMime', sql.VarChar(50), image?.mimeType || null);
+
+const create = async (catalogValue, body, context, file) => {
   const catalog = normalizeCatalog(catalogValue); const config = CONFIG[catalog]; const payload = normalizePayload(catalog, body); const empCod = sessionCompany(context);
+  const productImage = catalog === 'productos' ? normalizeImage(file) : null;
   const pool = await getPool(); const transaction = new sql.Transaction(pool); await transaction.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
   try {
     const request = new sql.Request(transaction).input('empCod', sql.Int, empCod);
@@ -139,20 +144,39 @@ const create = async (catalogValue, body, context) => {
       .query(`SELECT COALESCE(MAX(${config.id}),0)+1 id FROM ${config.table} WITH (UPDLOCK,HOLDLOCK) WHERE GECODEMP=@empCod`);
     const id = numeric(next.recordset[0].id);
     const insert = writeValues(new sql.Request(transaction).input('empCod', sql.Int, empCod).input('id', config.idType, id), catalog, payload);
-    await insert.query(insertSql(catalog, config)); await transaction.commit(); return { id };
+    if (catalog === 'productos') bindImage(insert, productImage);
+    const statement = catalog === 'productos'
+      ? insertSql(catalog, config).replace('PRODActivo)', 'PRODActivo,PRODImagen,PRODImagenMime)').replace('@active)', '@active,@image,@imageMime)')
+      : insertSql(catalog, config);
+    await insert.query(statement); await transaction.commit(); return { id };
   } catch (error) { await transaction.rollback(); throw error; }
 };
 
-const update = async (catalogValue, idValue, body, context) => {
+const update = async (catalogValue, idValue, body, context, file) => {
   const catalog = normalizeCatalog(catalogValue); const config = CONFIG[catalog]; const payload = normalizePayload(catalog, body); const empCod = sessionCompany(context);
+  const productImage = catalog === 'productos' ? normalizeImage(file) : null;
+  const removeImage = catalog === 'productos' && ['true', '1', 1, true].includes(body.removeImage);
   const id = integer(idValue, 'El codigo', { min: 1 }); const pool = await getPool(); const transaction = new sql.Transaction(pool); await transaction.begin();
   try {
     await validateReferences(new sql.Request(transaction).input('empCod', sql.Int, empCod), catalog, payload, empCod);
     const request = writeValues(new sql.Request(transaction).input('empCod', sql.Int, empCod).input('id', config.idType, id), catalog, payload);
-    const result = await request.query(updateSql(catalog, config));
+    if (catalog === 'productos') bindImage(request, productImage);
+    const imageUpdate = productImage ? ',PRODImagen=@image,PRODImagenMime=@imageMime' : removeImage ? ',PRODImagen=NULL,PRODImagenMime=NULL' : '';
+    const statement = catalog === 'productos' ? updateSql(catalog, config).replace(' WHERE GECODEMP', `${imageUpdate} WHERE GECODEMP`) : updateSql(catalog, config);
+    const result = await request.query(statement);
     if (!result.rowsAffected[0]) throw new SecurityError(404, 'MASTER_ROW_NOT_FOUND', 'El registro ya no existe.');
     await transaction.commit(); return { id };
   } catch (error) { await transaction.rollback(); throw error; }
+};
+
+const image = async (idValue, context) => {
+  const empCod = sessionCompany(context); const id = integer(idValue, 'El codigo', { min: 1 });
+  const result = await (await getPool()).request().input('empCod', sql.Int, empCod).input('id', sql.Decimal(10, 0), id)
+    .query('SELECT PRODImagen image,PRODImagenMime mimeType FROM SSP06MAProducto WHERE GECODEMP=@empCod AND PRODCodigo=@id');
+  const row = result.recordset[0];
+  if (!row) throw new SecurityError(404, 'MASTER_ROW_NOT_FOUND', 'El producto ya no existe.');
+  if (!row.image) throw new SecurityError(404, 'PRODUCT_IMAGE_NOT_FOUND', 'El producto no tiene una imagen cargada.');
+  return row;
 };
 
 const remove = async (catalogValue, idValue, context) => {
@@ -176,4 +200,4 @@ const options = async (context) => {
   return { casinos: result.recordsets[0] || [], categories: result.recordsets[1] || [] };
 };
 
-module.exports = { list, create, update, remove, options };
+module.exports = { list, create, update, remove, options, image };

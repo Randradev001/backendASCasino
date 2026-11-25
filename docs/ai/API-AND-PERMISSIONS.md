@@ -8,6 +8,10 @@ sesión. Los códigos de empresa no forman parte del contrato público.
 `POST /seguridad/login` recibe `email` y `password`; si hay varias empresas,
 se repite con `empCod` seleccionado. El correo se busca en `USUARIOS.UsuCorreo`.
 
+El dashboard resuelve las plantas desde la empresa activa de la sesión. Su respuesta
+incluye `metadata.availablePlants`; el parámetro opcional `plant` solo acepta una de
+esas plantas o `all`. Una planta perteneciente a otra empresa responde 403.
+
 ## Casino
 
 | Método y ruta | Propósito | Permiso efectivo |
@@ -16,6 +20,7 @@ se repite con `empCod` seleccionado. El correo se busca en `USUARIOS.UsuCorreo`.
 | `GET /casino/bi/historial` | Indicadores, filtros y listado histórico | 55/5/6 |
 | `GET /casino/bi/pedidos/:numero` | Detalle completo del pedido histórico | 55/5/6 |
 | `GET /casino/pedidos/contexto` | Solicitante y catálogos para crear | 55/1/1 |
+| `GET /casino/pedidos/productos/:id/imagen` | Imagen del producto activo de la empresa autenticada | 55/1/1 |
 | `POST /casino/pedidos` | Crear borrador con cabecera y detalle | 55/1/1 |
 | `POST /casino/pedidos/:numero/enviar` | Pasar borrador propio a estado 1 | 55/1/1 |
 | `POST /casino/pedidos/:numero/evaluacion` | Evaluar pedido entregado propio y ajustar pago | 55/1/1 |
@@ -37,6 +42,7 @@ se repite con `empCod` seleccionado. El correo se busca en `USUARIOS.UsuCorreo`.
 | `PUT/DELETE /casino/maestros/tipos-producto/:id` | Editar y eliminar un tipo | 55/10/10 |
 | `GET/POST /casino/maestros/productos` | Listar y crear productos | 55/10/11 |
 | `PUT/DELETE /casino/maestros/productos/:id` | Editar y eliminar un producto | 55/10/11 |
+| `GET /casino/maestros/productos/:id/imagen` | Obtener la imagen del producto de la empresa autenticada | 55/10/11 |
 | `GET /casino/maestros/opciones` | Casinos y tipos usados por Productos | 55/10/11 |
 | `GET /casino/consultas/tipo-producto` | Matriz mensual por casino y tipo | 55/5/1 |
 | `GET /casino/consultas/centro-costo` | Matriz mensual por división | 55/5/2 |
@@ -51,6 +57,12 @@ se repite con `empCod` seleccionado. El correo se busca en `USUARIOS.UsuCorreo`.
 | `PUT/DELETE /casino/maestros/solicitantes/:id` | Editar o eliminar solicitantes sin pedidos | 55/10/12 |
 | `POST /casino/cargas/validar` | Validar una plantilla XLSX sin escribir datos | 55/10/13 |
 | `POST /casino/cargas/importar` | Aplicar la plantilla completa en una transacción | 55/10/13 |
+
+Las altas y ediciones de productos aceptan JSON cuando no hay cambios de imagen y
+`multipart/form-data` cuando el formulario incorpora un archivo. El campo `image`
+admite JPEG, PNG o WebP de hasta 2 MB; en edición, `removeImage=true` elimina la imagen
+existente. Omitir ambos conserva la imagen actual. El listado informa `hasImage` sin
+incluir el binario.
 
 Las cuatro matrices mensuales aceptan `from` y `to` en formato `YYYY-MM-DD`, con ambos
 límites opcionales. Ya no reciben `year`: las columnas se generan como períodos mes/año

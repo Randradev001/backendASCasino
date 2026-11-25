@@ -106,7 +106,8 @@ const getContext = async (context, canManageOthers = false, canAccessRestrictedP
       WHERE GECODEMP=@empCod AND TPPRActivo=1 AND (COALESCE(TPPRAcceso,0)=0 OR @canAccessRestricted=1)
       ORDER BY TPPROrden, TPPRNombre;
 
-      SELECT P.PRODCodigo, P.TPPRCod, RTRIM(P.ProdNombre) ProdNombre, P.PRODPrecio, P.CASICod
+      SELECT P.PRODCodigo, P.TPPRCod, RTRIM(P.ProdNombre) ProdNombre, P.PRODPrecio, P.CASICod,
+             CONVERT(bit,CASE WHEN P.PRODImagen IS NULL THEN 0 ELSE 1 END) TieneImagen
       FROM SSP06MAProducto P
       INNER JOIN SSP06MATPProducto T ON T.GECODEMP=P.GECODEMP AND T.TPPRCod=P.TPPRCod
       WHERE P.GECODEMP=@empCod AND P.PRODActivo=1 AND T.TPPRActivo=1 AND (COALESCE(T.TPPRAcceso,0)=0 OR @canAccessRestricted=1)
@@ -130,11 +131,31 @@ const getContext = async (context, canManageOthers = false, canAccessRestrictedP
       })),
       products: (catalogs.recordsets[4] || []).map((row) => ({
         id: number(row.PRODCodigo), categoryId: number(row.TPPRCod), name: clean(row.ProdNombre),
-        price: number(row.PRODPrecio), casinoId: number(row.CASICod)
+        price: number(row.PRODPrecio), casinoId: number(row.CASICod), hasImage: Boolean(row.TieneImagen)
       }))
     },
     compatibility: { categoryAccessPending: false, emailNotificationAvailable: false }
   };
+};
+
+const getProductImage = async (idValue, context) => {
+  const session = assertContext(context);
+  const productId = Number(idValue);
+  if (!Number.isInteger(productId) || productId < 1) {
+    throw new SecurityError(400, 'INVALID_PRODUCT_ID', 'El código del producto no es válido.');
+  }
+  const result = await (await getPool()).request()
+    .input('empCod', sql.Int, session.empCod)
+    .input('productId', sql.Decimal(10, 0), productId)
+    .query(`
+      SELECT PRODImagen image,PRODImagenMime mimeType
+      FROM SSP06MAProducto
+      WHERE GECODEMP=@empCod AND PRODCodigo=@productId AND PRODActivo=1;
+    `);
+  const row = result.recordset[0];
+  if (!row) throw new SecurityError(404, 'PRODUCT_NOT_FOUND', 'El producto no existe en la empresa autenticada.');
+  if (!row.image) throw new SecurityError(404, 'PRODUCT_IMAGE_NOT_FOUND', 'El producto no tiene una imagen cargada.');
+  return row;
 };
 
 const nextOrderNumber = async (transaction, empCod) => {
@@ -337,4 +358,4 @@ const sendOrder = async (numberValue, context, canManageOthers = false) => {
   }
 };
 
-module.exports = { getContext, createDraft, sendOrder };
+module.exports = { getContext, getProductImage, createDraft, sendOrder };

@@ -32,7 +32,12 @@ rol. El segundo dashboard histórico usa exclusivamente 55/5/6 y se publica en
 
 La base actual asocia `D053`, `D054` y `D055` con Rosario. No existen divisiones identificadas como San Vicente o Lo Miranda. `D136` esta descrita como Faenadora El Milagro y se informa separadamente como dato no homologado; no se fuerza una equivalencia comercial sin confirmacion del negocio.
 
-El panel mantiene visibles las tres faenadoras requeridas, incluso cuando una no tiene homologacion o datos. Los filtros aceptan `rosario`, `san-vicente` y `lo-miranda`, nunca una empresa enviada por el navegador.
+El panel muestra únicamente las faenadoras homologadas para la empresa activa del
+usuario. La empresa 1 (`Procesadora de Alimentos del Sur`) se homologa con Rosario y la
+empresa 6100 (`Faenadora San Vicente`) con San Vicente; una razón social que contenga
+`Lo Miranda` habilitará esa planta. El backend entrega la lista en
+`metadata.availablePlants` y rechaza un filtro de otra empresa. Nunca se recibe una
+empresa desde el navegador.
 
 ## Salida ejecutiva
 

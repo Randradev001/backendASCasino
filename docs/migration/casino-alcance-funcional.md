@@ -18,7 +18,7 @@ la sesión y cada maestro conserva su programa histórico 55/10.
 | Destinos de pedidos | `SSP06MADestinosPlanta` · `maeSSP06MADestinosPlanta` | Implementado con 55/10/2. La baja se bloquea cuando existen pedidos asociados. |
 | Motivos de pedidos | `SSP06MAMotivoPedidos` · `maeSSP06MAMotivoPedidos` | Implementado con 55/10/3. La baja se bloquea cuando existen pedidos asociados. |
 | Tipos de productos | `SSP06MATPProducto` · `maeSSP06MATPProducto` | Implementado con 55/10/10: nombre, orden y `TPPRAcceso`. La baja se bloquea si contiene productos. |
-| Productos de casino | `SSP06MAProducto` · `maeSSP06MAProducto` | Implementado con 55/10/11: nombre, tipo, precio y casino. La baja se bloquea si aparece en pedidos. |
+| Productos de casino | `SSP06MAProducto` · `maeSSP06MAProducto` | Implementado con 55/10/11: nombre, tipo, precio, casino e imagen opcional. La imagen se puede cargar, reemplazar o quitar al crear y editar; la baja se bloquea si aparece en pedidos. |
 | Solicitantes | `SSP06MASolicitante` | Implementado con 55/10/12. Mantiene un ID interno autoincremental y sincroniza RUT, usuario y ubicación con Personas y Seguridad. |
 
 El centro de cargas 55/10/13 valida e importa XLSX. Los códigos de negocio se guardan

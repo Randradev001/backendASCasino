@@ -26,6 +26,14 @@ const requireMasterPermission = requirePermission((req) => ({ sistema: 55, modul
 const reportPermissions = { 'tipo-producto': 1, 'centro-costo': 2, persona: 3, motivo: 4 };
 const requireReportPermission = requirePermission((req) => ({ sistema: 55, modulo: 5, programa: reportPermissions[req.params.consulta] }));
 const workbookUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 1 } });
+const productImageUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024, files: 1 } });
+const optionalProductImage = (req, res, next) => {
+  if (req.params.catalogo !== 'productos' || !req.is('multipart/form-data')) return next();
+  return productImageUpload.single('image')(req, res, (error) => {
+    if (!error) return next();
+    return res.status(400).json({ code: 'INVALID_PRODUCT_IMAGE', message: error.code === 'LIMIT_FILE_SIZE' ? 'La imagen admite un máximo de 2 MB.' : 'No fue posible procesar la imagen.' });
+  });
+};
 
 router.use(authContext);
 router.get('/bi/pedidos', requireAnyPermission(consultationPermissions), biController.dashboard);
@@ -44,6 +52,7 @@ router.post('/maestros/solicitantes', requirePermission({ sistema: 55, modulo: 1
 router.put('/maestros/solicitantes/:id', requirePermission({ sistema: 55, modulo: 10, programa: 12 }), requestersController.update);
 router.delete('/maestros/solicitantes/:id', requirePermission({ sistema: 55, modulo: 10, programa: 12 }), requestersController.remove);
 router.get('/pedidos/contexto', requirePermission(orderPermission), ordersController.context);
+router.get('/pedidos/productos/:id/imagen', requirePermission(orderPermission), ordersController.image);
 router.post('/pedidos', requirePermission(orderPermission), ordersController.create);
 router.post('/pedidos/:numero/enviar', requirePermission(orderPermission), ordersController.send);
 router.post('/pedidos/:numero/evaluacion', requirePermission(orderPermission), evaluationsController.evaluate);
@@ -56,9 +65,10 @@ router.post('/solicitudes/:numero/entregar', requirePermission(requestsPermissio
 router.post('/solicitudes/:numero/observacion', requirePermission(requestsPermission), evaluationsController.observe);
 router.post('/solicitudes/:numero/control-pago', requirePermission(requestsPermission), evaluationsController.payment);
 router.get('/maestros/opciones', requirePermission({ sistema: 55, modulo: 10, programa: 11 }), mastersController.options);
+router.get('/maestros/productos/:id/imagen', requirePermission({ sistema: 55, modulo: 10, programa: 11 }), mastersController.image);
 router.get('/maestros/:catalogo', requireMasterPermission, mastersController.list);
-router.post('/maestros/:catalogo', requireMasterPermission, mastersController.create);
-router.put('/maestros/:catalogo/:id', requireMasterPermission, mastersController.update);
+router.post('/maestros/:catalogo', requireMasterPermission, optionalProductImage, mastersController.create);
+router.put('/maestros/:catalogo/:id', requireMasterPermission, optionalProductImage, mastersController.update);
 router.delete('/maestros/:catalogo/:id', requireMasterPermission, mastersController.remove);
 
 module.exports = router;

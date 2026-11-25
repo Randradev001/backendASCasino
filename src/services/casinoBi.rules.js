@@ -6,6 +6,15 @@ const PLANTS = [
   { id: 'lo-miranda', name: 'Faenadora Lo Miranda', codes: [] }
 ];
 
+const plantsForCompany = (empCod, companyName = '') => {
+  const normalizedName = String(companyName).trim().toUpperCase();
+  const ids = [];
+  if (Number(empCod) === 1 || normalizedName.includes('ROSARIO') || normalizedName.includes('PROCESADORA DE ALIMENTOS DEL SUR')) ids.push('rosario');
+  if (normalizedName.includes('SAN VICENTE')) ids.push('san-vicente');
+  if (normalizedName.includes('LO MIRANDA')) ids.push('lo-miranda');
+  return PLANTS.filter((plant) => ids.includes(plant.id));
+};
+
 const validDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
 
 const normalizeDashboardQuery = (query = {}) => {
@@ -93,4 +102,4 @@ const buildBusinessAnalysis = ({ kpis = {}, plants = [], trend = [], topProducts
   };
 };
 
-module.exports = { PLANTS, normalizeDashboardQuery, statusLabel, buildBusinessAnalysis };
+module.exports = { PLANTS, plantsForCompany, normalizeDashboardQuery, statusLabel, buildBusinessAnalysis };

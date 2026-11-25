@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { normalizeListQuery, normalizePayload, permissionForCatalog } = require('../src/services/casinoMaestros.rules');
+const { normalizeListQuery, normalizePayload, normalizeImage, permissionForCatalog } = require('../src/services/casinoMaestros.rules');
 
 test('normaliza paginacion y filtros sin aceptar empresa desde pantalla', () => {
   assert.deepEqual(normalizeListQuery({ q: ' aves ', page: '2', pageSize: '50', casinoId: '1', empCod: 99 }), {
@@ -32,4 +32,10 @@ test('rechaza acceso, precio y correo invalidos', () => {
 test('mapea cada maestro a su programa de seguridad', () => {
   assert.deepEqual(permissionForCatalog('casinos'), { sistema: 55, modulo: 10, programa: 1 });
   assert.deepEqual(permissionForCatalog('productos'), { sistema: 55, modulo: 10, programa: 11 });
+});
+
+test('valida imágenes de producto por firma y tipo MIME', () => {
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  assert.deepEqual(normalizeImage({ mimetype: 'image/png', buffer: png }), { mimeType: 'image/png', buffer: png });
+  assert.throws(() => normalizeImage({ mimetype: 'image/png', buffer: Buffer.from('no es png') }), /JPEG, PNG o WebP/);
 });
