@@ -43,6 +43,8 @@ const create = async (req, res) => {
     return sendError(res, error);
   }
 };
+const draft = async (req, res) => { try { return res.json(await service.getDraft(req.params.numero, req.context, canManageOthers(req))); } catch (error) { return sendError(res, error); } };
+const update = async (req, res) => { try { return res.json(await service.updateDraft(req.params.numero, req.body, req.context, canManageOthers(req), canAccessRestrictedProducts(req))); } catch (error) { return sendError(res, error); } };
 
 const send = async (req, res) => {
   try {
@@ -52,4 +54,4 @@ const send = async (req, res) => {
   }
 };
 
-module.exports = { context, image, create, send };
+module.exports = { context, image, create, draft, update, send };

@@ -16,12 +16,16 @@ esas plantas o `all`. Una planta perteneciente a otra empresa responde 403.
 
 | Método y ruta | Propósito | Permiso efectivo |
 | --- | --- | --- |
-| `GET /casino/bi/pedidos` | Dashboard ejecutivo principal | 55/1/1 o cualquiera de 55/5/1–6 |
+| `GET /casino/bi/pedidos` | Dashboard administrativo global | `ADMINFULL` |
+| `GET /casino/bi/mis-pedidos` | Dashboard de la persona autenticada | 55/1/1 |
+| `GET /casino/bi/casino` | Dashboard del Casino asociado a la sesión | 55/1/10 |
 | `GET /casino/bi/historial` | Indicadores, filtros y listado histórico | 55/5/6 |
 | `GET /casino/bi/pedidos/:numero` | Detalle completo del pedido histórico | 55/5/6 |
 | `GET /casino/pedidos/contexto` | Solicitante y catálogos para crear | 55/1/1 |
 | `GET /casino/pedidos/productos/:id/imagen` | Imagen del producto activo de la empresa autenticada | 55/1/1 |
 | `POST /casino/pedidos` | Crear borrador con cabecera y detalle | 55/1/1 |
+| `GET /casino/pedidos/:numero/borrador` | Recuperar un borrador propio | 55/1/1 |
+| `PUT /casino/pedidos/:numero` | Actualizar transaccionalmente un borrador propio | 55/1/1 |
 | `POST /casino/pedidos/:numero/enviar` | Pasar borrador propio a estado 1 | 55/1/1 |
 | `POST /casino/pedidos/:numero/evaluacion` | Evaluar pedido entregado propio y ajustar pago | 55/1/1 |
 | `GET /casino/solicitudes` | Solicitudes del Casino asociado a la sesión | 55/1/10 |
@@ -162,7 +166,9 @@ pero el backend vuelve a validar cada operación.
 
 | Ruta React | Origen de menú | Resultado |
 | --- | --- | --- |
-| `/dashboard/default` | Entrada estática `Inicio > Panel ejecutivo` | Dashboard principal |
+| `/dashboard/default` | `Navigation`, solo administrador | Dashboard administrativo |
+| `/dashboard/mis-pedidos` | `Navigation`, 55/1/1 | Dashboard personal |
+| `/dashboard/casino` | `Navigation`, 55/1/10 | Dashboard del Casino |
 | `/casino/pedidos/nuevo` | 55/1/1, `ssp.maeSSP06OPPedidosPlanta.aspx` | Nueva solicitud |
 | `/casino/pedidos/historial` | 55/5/6, `react.casinoHistory` | Dashboard histórico |
 | `/casino/solicitudes` | 55/1/10, `react.casinoRequests` | Control operacional del Casino |

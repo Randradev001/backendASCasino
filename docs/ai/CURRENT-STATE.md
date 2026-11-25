@@ -53,7 +53,9 @@ hosts privados durante desarrollo, pero en producción exige la lista `CORS_ORIG
 | Inicio con correo y clave | Implementado; `UsuLogin` sigue como identidad interna | `POST /seguridad/login` |
 | Administración de Seguridad | Implementada para `ADMINFULL` | `/seguridad/*` |
 | Ficha y búsqueda de Personas | Implementada | `/personas` |
-| Dashboard ejecutivo principal | Implementado | `/dashboard/default` |
+| Dashboard administrativo global | Implementado; solo `ADMINFULL` | `/dashboard/default` |
+| Dashboard personal de pedidos | Implementado; aislado por RUT de sesión | `/dashboard/mis-pedidos` |
+| Dashboard operacional del Casino | Implementado; aislado por Casino de sesión | `/dashboard/casino` |
 | Crear solicitud Casino | Implementado | `/casino/pedidos/nuevo` |
 | Controlar solicitudes del Casino | Implementado; catálogo y tabla aplicados en `BDADP_CASINO` | `/casino/solicitudes` |
 | Historial y detalle de pedidos | Implementado | `/casino/pedidos/historial` |
@@ -82,8 +84,8 @@ superiores y los contadores visuales por tipo/producto se retiraron para reducir
 densidad de la pantalla, aunque el contrato backend conserva esos agregados por
 compatibilidad.
 
-El dashboard principal permanece siempre en el grupo estático `Inicio > Panel
-ejecutivo`. El menú dinámico autorizado agrega:
+El grupo estático `Navigation` presenta los tres dashboards y los atajos críticos según
+los permisos efectivos. El menú dinámico autorizado agrega:
 
 - `Solicitudes Casino > Operacional > Pedidos Casino` para 55/1/1.
 - `Solicitudes Casino > Operacional > Ver solicitudes` para 55/1/10.
@@ -114,6 +116,8 @@ ejecutivo`. El menú dinámico autorizado agrega:
   petición manual por un producto restringido responde 403 sin crear el borrador.
 - El detalle toma división, subdivisión y centro de costo desde `SSP06MASolicitante`.
 - Guardar crea estado 0; enviar cambia a estado 1.
+- Un borrador propio puede recuperarse, editarse y guardarse nuevamente desde el
+  dashboard personal; empresa, propietario, productos y precios se revalidan en backend.
 - El Casino de la sesión se resuelve por `USUARIOS.UsuRut = SSP06MACasinosPlanta.CASIRut`.
   Con 55/1/10 puede aprobar 1 → 2 confirmando fecha/hora o rechazar 1 → 5 con comentario.
 - Un pedido en preparación puede entregarse 2 → 3. El backend usa la hora del servidor
@@ -188,8 +192,8 @@ deben convertirse en constantes:
 4. Realizar validación funcional controlada con usuarios de negocio para creación,
    envío, filtros históricos y detalle.
 5. Validar funcionalmente aprobación y rechazo con un usuario asociado a cada Casino.
-6. Completar la recuperación de borradores en React y ofrecer un destino posterior
-   al envío para solicitantes sin el permiso de historial 55/5/6.
+6. Ofrecer un destino posterior al envío para solicitantes sin el permiso de historial
+   55/5/6.
 7. Registrar al responsable `manuel.rodriguezcabello@sodexo.com` como solicitante/usuario
    antes de aplicar la plantilla San Vicente. `ProdNombre` ya admite 60 caracteres.
 

@@ -312,6 +312,42 @@ const createDraft = async (body, context, canManageOthers = false, canAccessRest
   }
 };
 
+const getDraft = async (numberValue, context, canManageOthers = false) => {
+  const session = assertContext(context); const orderNumber = Number(numberValue);
+  if (!Number.isInteger(orderNumber) || orderNumber < 1) throw new SecurityError(400, 'VALIDATION_ERROR', 'El número de pedido no es válido.');
+  const pool = await getPool(); const authenticated = await loadAuthenticatedUser(pool, session);
+  const result = await pool.request().input('empCod', sql.Int, session.empCod).input('number', sql.Decimal(10, 0), orderNumber).query(`
+    SELECT PEDNumero,PEDDescripcion,DESTICod,CASICod,Mot6Cod,pedfechaEntrega,PedHHEntrega,PedRutSolicita,PedEstadoIngreso FROM SSP06OPPedidosPlanta WHERE GECODEMP=@empCod AND PEDNumero=@number;
+    SELECT PRODCodigo,PED1Cantidad FROM SSP06OPPedidosPlantaDet WHERE GECODEMP=@empCod AND PEDNumero=@number;
+  `);
+  const row = result.recordsets[0]?.[0];
+  if (!row) throw new SecurityError(404, 'ORDER_NOT_FOUND', 'El borrador no existe.');
+  if (number(row.PedEstadoIngreso) !== 0) throw new SecurityError(409, 'ORDER_NOT_DRAFT', 'El pedido ya no está en borrador.');
+  if (!canManageOthers && number(row.PedRutSolicita) !== authenticated.rut) throw new SecurityError(403, 'ORDER_FORBIDDEN', 'No puede editar el borrador de otra persona.');
+  const delivery = new Date(row.PedHHEntrega || row.pedfechaEntrega);
+  return { number: orderNumber, requesterRut: number(row.PedRutSolicita), casinoId: number(row.CASICod), destinationId: number(row.DESTICod), motiveId: number(row.Mot6Cod), description: clean(row.PEDDescripcion), deliveryDate: delivery.toISOString().slice(0, 10), deliveryTime: delivery.toISOString().slice(11, 16), lines: (result.recordsets[1] || []).map((line) => ({ productCode: number(line.PRODCodigo), quantity: number(line.PED1Cantidad) })) };
+};
+
+const updateDraft = async (numberValue, body, context, canManageOthers = false, canAccessRestrictedProducts = false) => {
+  const session = assertContext(context); const orderNumber = Number(numberValue); const input = normalizeOrderPayload(body);
+  if (!Number.isInteger(orderNumber) || orderNumber < 1) throw new SecurityError(400, 'VALIDATION_ERROR', 'El número de pedido no es válido.');
+  const pool = await getPool(); const transaction = new sql.Transaction(pool); await transaction.begin(sql.ISOLATION_LEVEL.SERIALIZABLE);
+  try {
+    const authenticated = await loadAuthenticatedUser(transaction, session);
+    const existing = (await new sql.Request(transaction).input('empCod', sql.Int, session.empCod).input('number', sql.Decimal(10, 0), orderNumber).query('SELECT PedRutSolicita,PedEstadoIngreso FROM SSP06OPPedidosPlanta WITH (UPDLOCK,HOLDLOCK) WHERE GECODEMP=@empCod AND PEDNumero=@number')).recordset[0];
+    if (!existing) throw new SecurityError(404, 'ORDER_NOT_FOUND', 'El borrador no existe.');
+    if (number(existing.PedEstadoIngreso) !== 0) throw new SecurityError(409, 'ORDER_NOT_DRAFT', 'El pedido ya no está en borrador.');
+    if (!canManageOthers && number(existing.PedRutSolicita) !== authenticated.rut) throw new SecurityError(403, 'ORDER_FORBIDDEN', 'No puede editar el borrador de otra persona.');
+    const requesterRut = resolveRequesterRut({ authenticatedRut: authenticated.rut, requestedRut: input.requesterRut, canManageOthers });
+    const requester = await loadRequester(transaction, session.empCod, requesterRut); if (!requester.locationComplete) throw new SecurityError(409, 'REQUESTER_LOCATION_REQUIRED', buildRequesterLocationError(requester).message);
+    const products = await validateCatalogs(transaction, session, input, canAccessRestrictedProducts);
+    await new sql.Request(transaction).input('empCod', sql.Int, session.empCod).input('number', sql.Decimal(10, 0), orderNumber).input('description', sql.Char(400), input.description).input('destination', sql.Decimal(10, 0), input.destinationId).input('casino', sql.Decimal(10, 0), input.casinoId).input('motive', sql.SmallInt, input.motiveId).input('date', sql.VarChar(10), input.deliveryDate).input('minutes', sql.Int, input.deliveryMinutes).input('rut', sql.Int, requester.rut).query(`DECLARE @delivery datetime=CONVERT(datetime,@date,120); UPDATE SSP06OPPedidosPlanta SET PEDDescripcion=@description,DESTICod=@destination,CASICod=@casino,Mot6Cod=@motive,pedfechaEntrega=@delivery,PedHHEntrega=DATEADD(minute,@minutes,@delivery),PedRutSolicita=@rut WHERE GECODEMP=@empCod AND PEDNumero=@number; DELETE SSP06OPPedidosPlantaDet WHERE GECODEMP=@empCod AND PEDNumero=@number;`);
+    let amount = 0;
+    for (const line of input.lines) { const product = products.get(line.productCode); const price = number(product.PRODPrecio); amount += price * line.quantity; await new sql.Request(transaction).input('empCod', sql.Int, session.empCod).input('number', sql.Decimal(10, 0), orderNumber).input('product', sql.Decimal(10, 0), line.productCode).input('price', sql.Decimal(10, 0), price).input('quantity', sql.SmallInt, line.quantity).input('date', sql.VarChar(10), input.deliveryDate).input('div', sql.Char(10), requester.location.divisionId).input('sub', sql.Char(10), requester.location.subdivisionId).input('cost', sql.Char(10), requester.location.costCenterId).query('INSERT SSP06OPPedidosPlantaDet(GECODEMP,PEDNumero,PRODCodigo,PED1Precio,PED1Cantidad,PED1FechaEnt,DivId,SdiId,CecId) VALUES(@empCod,@number,@product,@price,@quantity,CONVERT(datetime,@date,120),@div,@sub,@cost)'); }
+    await transaction.commit(); return { number: orderNumber, status: 0, statusLabel: 'Borrador', lines: input.lines.length, quantity: input.lines.reduce((sum, line) => sum + line.quantity, 0), amount };
+  } catch (error) { await transaction.rollback(); throw error; }
+};
+
 const sendOrder = async (numberValue, context, canManageOthers = false) => {
   const session = assertContext(context);
   const orderNumber = Number(numberValue);
@@ -358,4 +394,4 @@ const sendOrder = async (numberValue, context, canManageOthers = false) => {
   }
 };
 
-module.exports = { getContext, getProductImage, createDraft, sendOrder };
+module.exports = { getContext, getProductImage, createDraft, getDraft, updateDraft, sendOrder };

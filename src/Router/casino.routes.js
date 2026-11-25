@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const biController = require('../controllers/casinoBiController');
+const profileDashboardController = require('../controllers/casinoProfileDashboardController');
 const historyController = require('../controllers/casinoHistorialController');
 const ordersController = require('../controllers/casinoPedidosController');
 const requestsController = require('../controllers/casinoSolicitudesController');
@@ -12,12 +13,8 @@ const loadController = require('../controllers/casinoCargaController');
 const requestersController = require('../controllers/casinoSolicitantesController');
 const multer = require('multer');
 const authContext = require('../middleware/authContext');
-const { requireAnyPermission, requirePermission } = require('../middleware/securityAuthorization');
+const { requirePermission, requireSecurityAdmin } = require('../middleware/securityAuthorization');
 
-const consultationPermissions = [
-  { sistema: 55, modulo: 1, programa: 1 },
-  ...[1, 2, 3, 4, 5, 6].map((programa) => ({ sistema: 55, modulo: 5, programa }))
-];
 const orderPermission = { sistema: 55, modulo: 1, programa: 1 };
 const historyPermission = { sistema: 55, modulo: 5, programa: 6 };
 const requestsPermission = { sistema: 55, modulo: 1, programa: 10 };
@@ -36,7 +33,9 @@ const optionalProductImage = (req, res, next) => {
 };
 
 router.use(authContext);
-router.get('/bi/pedidos', requireAnyPermission(consultationPermissions), biController.dashboard);
+router.get('/bi/pedidos', requireSecurityAdmin, biController.dashboard);
+router.get('/bi/mis-pedidos', requirePermission(orderPermission), profileDashboardController.person);
+router.get('/bi/casino', requirePermission(requestsPermission), profileDashboardController.casino);
 router.get('/bi/historial', requirePermission(historyPermission), historyController.history);
 router.get('/bi/pedidos/:numero', requirePermission(historyPermission), historyController.detail);
 router.get('/consultas/descarga-general', requirePermission({ sistema: 55, modulo: 5, programa: 5 }), generalDownloadController.get);
@@ -54,6 +53,8 @@ router.delete('/maestros/solicitantes/:id', requirePermission({ sistema: 55, mod
 router.get('/pedidos/contexto', requirePermission(orderPermission), ordersController.context);
 router.get('/pedidos/productos/:id/imagen', requirePermission(orderPermission), ordersController.image);
 router.post('/pedidos', requirePermission(orderPermission), ordersController.create);
+router.get('/pedidos/:numero/borrador', requirePermission(orderPermission), ordersController.draft);
+router.put('/pedidos/:numero', requirePermission(orderPermission), ordersController.update);
 router.post('/pedidos/:numero/enviar', requirePermission(orderPermission), ordersController.send);
 router.post('/pedidos/:numero/evaluacion', requirePermission(orderPermission), evaluationsController.evaluate);
 router.get('/solicitudes', requirePermission(requestsPermission), requestsController.list);
